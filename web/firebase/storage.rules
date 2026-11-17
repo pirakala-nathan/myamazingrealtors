@@ -1,0 +1,15 @@
+rules_version = '2';
+
+// Listing photos are uploaded by the server only. Public read so photos can be
+// shown on the site; no browser writes.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /listings/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
