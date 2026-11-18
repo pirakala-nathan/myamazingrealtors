@@ -10,6 +10,7 @@ import {
   uploadReelChunk,
   type AdminFormState,
 } from "@/app/actions/admin";
+import { HouseLoader } from "@/components/ui/house-loader";
 import { COMPRESS_ABOVE_BYTES, compressVideo } from "./compress-video";
 
 export type ReelItem = {
@@ -97,7 +98,8 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
   }
   useEffect(refreshUnattached, []);
 
-  const update = (id: string, patch: Partial<ReelItem>) => setReels((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+  const update = (id: string, patch: Partial<ReelItem>) =>
+    setReels((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   const move = (from: number, to: number) =>
     setReels((r) => {
       if (to < 0 || to >= r.length) return r;
@@ -146,7 +148,8 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
       let light = original;
       if (original.size > COMPRESS_ABOVE_BYTES) {
         say("Making the light version 0%");
-        light = (await compressVideo(original, "light", (f) => say(`Making the light version ${percent(f)}`))) ?? original;
+        light =
+          (await compressVideo(original, "light", (f) => say(`Making the light version ${percent(f)}`))) ?? original;
       }
       const video = await send(light, "Uploading the light version");
 
@@ -166,7 +169,8 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
       if (light !== original) {
         try {
           say("Making the HD version 0%");
-          const hd = (await compressVideo(original, "hd", (f) => say(`Making the HD version ${percent(f)}`))) ?? original;
+          const hd =
+            (await compressVideo(original, "hd", (f) => say(`Making the HD version ${percent(f)}`))) ?? original;
           const videoHd = await send(hd, "Uploading the HD version");
           await commit((list) => list.map((x) => (x.id === id && x.video === video ? { ...x, videoHd } : x)));
         } catch (error) {
@@ -178,7 +182,10 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
         }
       }
     } catch (error) {
-      setErrors((e) => ({ ...e, [id]: error instanceof Error ? error.message : "Upload failed." }));
+      setErrors((e) => ({
+        ...e,
+        [id]: error instanceof Error ? error.message : "Upload failed.",
+      }));
     } finally {
       setProgress((p) => {
         const next = { ...p };
@@ -209,7 +216,13 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
               const empty = reels.find((r) => !r.video);
               return (
                 <li key={v.path} className="flex w-36 flex-col gap-1.5 bg-white p-2">
-                  <video src={`${v.url}#t=0.5`} preload="metadata" muted playsInline className="aspect-[9/16] w-full bg-navy-900 object-cover" />
+                  <video
+                    src={`${v.url}#t=0.5`}
+                    preload="metadata"
+                    muted
+                    playsInline
+                    className="aspect-[9/16] w-full bg-navy-900 object-cover"
+                  />
                   <span className="text-[11px] text-muted">
                     {(v.size / 1024 / 1024).toFixed(1)} MB · {new Date(v.createdAt).toLocaleDateString("en-CA")}
                   </span>
@@ -221,8 +234,26 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
                       commit((list) => {
                         const slot = list.find((r) => !r.video);
                         return slot
-                          ? list.map((r) => (r.id === slot.id ? { ...r, video: v.url, videoHd: null, poster: null } : r))
-                          : [...list, { id: crypto.randomUUID(), video: v.url, poster: null, title: null, instagramUrl: null }];
+                          ? list.map((r) =>
+                              r.id === slot.id
+                                ? {
+                                    ...r,
+                                    video: v.url,
+                                    videoHd: null,
+                                    poster: null,
+                                  }
+                                : r,
+                            )
+                          : [
+                              ...list,
+                              {
+                                id: crypto.randomUUID(),
+                                video: v.url,
+                                poster: null,
+                                title: null,
+                                instagramUrl: null,
+                              },
+                            ];
                       })
                     }
                   >
@@ -258,13 +289,21 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={reel.poster} alt="" className="size-full object-cover" />
               ) : reel.video ? (
-                <video src={`${reel.video}#t=0.5`} preload="metadata" muted playsInline className="size-full object-cover" />
+                <video
+                  src={`${reel.video}#t=0.5`}
+                  preload="metadata"
+                  muted
+                  playsInline
+                  className="size-full object-cover"
+                />
               ) : (
                 <span className="flex size-full items-center justify-center p-2 text-center text-[11px] font-bold text-on-dark-subtle">
                   No video yet
                 </span>
               )}
-              <span className="absolute left-1 top-1 bg-navy-900 px-1.5 py-0.5 text-[11px] font-extrabold text-aqua-400">{i + 1}</span>
+              <span className="absolute left-1 top-1 bg-navy-900 px-1.5 py-0.5 text-[11px] font-extrabold text-aqua-400">
+                {i + 1}
+              </span>
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-2">
               <label className="sr-only" htmlFor={`title-${reel.id}`}>
@@ -294,7 +333,16 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
                   progress[reel.id] ? "cursor-wait opacity-70" : "hover:bg-navy-900 hover:text-on-dark"
                 }`}
               >
-                {progress[reel.id] ?? (reel.video ? "Replace video" : "Upload video")}
+                {progress[reel.id] ? (
+                  <span className="flex items-center gap-2">
+                    <HouseLoader size="sm" showLabel={false} label={progress[reel.id]} className="[&_svg]:w-6" />
+                    {progress[reel.id]}
+                  </span>
+                ) : reel.video ? (
+                  "Replace video"
+                ) : (
+                  "Upload video"
+                )}
                 <input
                   type="file"
                   accept="video/*"
@@ -313,7 +361,13 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
                 </p>
               )}
               <div className="flex gap-1.5">
-                <button type="button" className={small} disabled={i === 0} aria-label={`Move reel ${i + 1} earlier`} onClick={() => move(i, i - 1)}>
+                <button
+                  type="button"
+                  className={small}
+                  disabled={i === 0}
+                  aria-label={`Move reel ${i + 1} earlier`}
+                  onClick={() => move(i, i - 1)}
+                >
                   ←
                 </button>
                 <button
@@ -344,7 +398,16 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
           disabled={reels.length >= max}
           className="min-h-12 border-[1.5px] border-navy-900 px-6 font-bold disabled:opacity-40"
           onClick={() =>
-            setReels((r) => [...r, { id: crypto.randomUUID(), video: null, poster: null, title: null, instagramUrl: null }])
+            setReels((r) => [
+              ...r,
+              {
+                id: crypto.randomUUID(),
+                video: null,
+                poster: null,
+                title: null,
+                instagramUrl: null,
+              },
+            ])
           }
         >
           {reels.length >= max ? `${max} reels (maximum)` : "Add a reel"}
@@ -357,7 +420,10 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
           {pending ? "Saving…" : uploading ? "Wait for uploads…" : "Save reels"}
         </button>
         {state.message && (
-          <p role={state.status === "error" ? "alert" : "status"} className={`text-sm font-semibold ${state.status === "error" ? "text-red-800" : "text-aqua-700"}`}>
+          <p
+            role={state.status === "error" ? "alert" : "status"}
+            className={`text-sm font-semibold ${state.status === "error" ? "text-red-800" : "text-aqua-700"}`}
+          >
             {state.message}
           </p>
         )}

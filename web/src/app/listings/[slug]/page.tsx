@@ -1,3 +1,4 @@
+import { HouseLoader } from "@/components/ui/house-loader";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -157,7 +158,13 @@ async function ListingDetail({ params }: { params: PageProps<"/listings/[slug]">
 
 export default function ListingPage({ params }: PageProps<"/listings/[slug]">) {
   return (
-    <Suspense fallback={<div className="container-site min-h-[60vh] py-16 text-muted">Loading listing…</div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center py-20">
+          <HouseLoader size="lg" label="Loading listing" />
+        </div>
+      }
+    >
       <ListingDetail params={params} />
     </Suspense>
   );

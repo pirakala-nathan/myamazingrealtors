@@ -1,7 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { HouseLoader } from "@/components/ui/house-loader";
 import { useDragScroll, usePause } from "./use-pause";
+
+/** Loader over a video that is buffering. It fades in after a short delay, so quick starts never flash it. */
+function BufferingOverlay({ show }: { show: boolean }) {
+  return (
+    <span
+      aria-hidden={!show}
+      className={`pointer-events-none absolute inset-0 flex items-center justify-center bg-navy-950/40 transition-opacity ${
+        show ? "opacity-100 delay-300 duration-300" : "opacity-0 duration-150"
+      }`}
+    >
+      {show && <HouseLoader tone="dark" size="sm" showLabel={false} label="Loading video" />}
+    </span>
+  );
+}
 
 /** iPads and computers get the 1080p version in the full-screen player; phones the lighter one. */
 const LARGE_SCREEN = "(min-width: 768px)";
@@ -58,8 +73,14 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
   // The player stays mounted (hidden) and loads the reel the visitor is likely to open next, so expanding
   // is instant: the playing reel, or one the visitor points at (counted only while the same reel still plays
   // in the row). `eager` turns on full buffering once they hover, focus or touch a reel.
-  const [hovered, setHovered] = useState<{ index: number; whileActive: number } | null>(null);
+  const [hovered, setHovered] = useState<{
+    index: number;
+    whileActive: number;
+  } | null>(null);
   const [eager, setEager] = useState(false);
+  // Which preview is waiting for data, and whether the full-screen player is.
+  const [previewBuffering, setPreviewBuffering] = useState<number | null>(null);
+  const [playerBuffering, setPlayerBuffering] = useState(false);
   const warmUp = (i: number) => {
     setHovered({ index: i, whileActive: active });
     setEager(true);
@@ -99,7 +120,7 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
       player.currentTime = t > 0 && t < player.duration - 0.3 ? t : 0;
       player.play().catch(() => {});
     }
-  }, [open]);  // Latest versions for the keyboard listener below.
+  }, [open]); // Latest versions for the keyboard listener below.
   const closePlayerRef = useRef(closePlayer);
   const switchPlayerRef = useRef(switchPlayer);
   useEffect(() => {
@@ -154,7 +175,10 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
         setActive((current) => {
           if (!atEnd) return best;
           const el = track.children[current] as HTMLElement | undefined;
-          const visible = el && el.offsetLeft >= track.scrollLeft && el.offsetLeft + el.offsetWidth <= track.scrollLeft + track.clientWidth;
+          const visible =
+            el &&
+            el.offsetLeft >= track.scrollLeft &&
+            el.offsetLeft + el.offsetWidth <= track.scrollLeft + track.clientWidth;
           return visible && current >= best ? current : best;
         });
       });
@@ -244,9 +268,7 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
   const playerSrc = current && largeScreen && current.videoHd ? current.videoHd : current?.video;
 
   return (
-    <div
-      {...pauseHandlers}
-    >
+    <div {...pauseHandlers}>
       <ul
         ref={trackRef}
         aria-label="Reels"
@@ -270,7 +292,11 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
                 onPointerEnter={() => warmUp(i)}
                 onPointerDown={() => warmUp(i)}
                 onFocus={() => warmUp(i)}
-                aria-label={isActive ? `Play ${reel.title ?? `reel ${i + 1}`} with sound` : `Show ${reel.title ?? `reel ${i + 1}`}`}
+                aria-label={
+                  isActive
+                    ? `Play ${reel.title ?? `reel ${i + 1}`} with sound`
+                    : `Show ${reel.title ?? `reel ${i + 1}`}`
+                }
                 className={`group relative block aspect-[9/16] w-full overflow-hidden bg-navy-950 text-left ${
                   isActive ? "shadow-[0_24px_60px_-20px_rgba(0,178,219,0.55)] outline outline-2 outline-aqua-400" : ""
                 }`}
@@ -294,12 +320,18 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
                   }
                   onTimeUpdate={(e) => {
                     if (isActive && e.currentTarget.duration) {
-                      setProgress({ index: i, value: e.currentTarget.currentTime / e.currentTarget.duration });
+                      setProgress({
+                        index: i,
+                        value: e.currentTarget.currentTime / e.currentTarget.duration,
+                      });
                     }
                   }}
                   onEnded={() => (reels.length > 1 ? next() : undefined)}
+                  onWaiting={() => setPreviewBuffering(i)}
+                  onPlaying={() => setPreviewBuffering((b) => (b === i ? null : b))}
                   className="size-full object-cover"
                 />
+                <BufferingOverlay show={isActive && autoplay && previewBuffering === i} />
                 <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-navy-950/75 px-4 py-3 text-on-dark">
                   <span className="line-clamp-2 text-sm font-bold">{reel.title ?? "Watch"}</span>
                   <span
@@ -315,7 +347,12 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
                 </span>
                 {isActive && (
                   <span className="absolute inset-x-0 top-0 h-[3px] bg-white/20" aria-hidden="true">
-                    <span className="block h-full bg-aqua-400" style={{ width: `${progress.index === i ? progress.value * 100 : 0}%` }} />
+                    <span
+                      className="block h-full bg-aqua-400"
+                      style={{
+                        width: `${progress.index === i ? progress.value * 100 : 0}%`,
+                      }}
+                    />
                   </span>
                 )}
               </button>
@@ -328,17 +365,36 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
         <div className="container-site mt-4 flex items-center justify-between gap-4">
           <div className="flex gap-2" aria-hidden="true">
             {reels.map((r, i) => (
-              <span key={r.id} className={`h-[3px] transition-all duration-500 ${i === active ? "w-10 bg-aqua-400" : "w-4 bg-navy-500"}`} />
+              <span
+                key={r.id}
+                className={`h-[3px] transition-all duration-500 ${i === active ? "w-10 bg-aqua-400" : "w-4 bg-navy-500"}`}
+              />
             ))}
           </div>
           <div className="flex gap-2">
             <button type="button" className={arrow} onClick={() => goTo(active - 1)} aria-label="Previous reel">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
                 <path d="M19 12H5M11 6l-6 6 6 6" />
               </svg>
             </button>
             <button type="button" className={arrow} onClick={() => goTo(active + 1)} aria-label="Next reel">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
             </button>
@@ -358,8 +414,12 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
             if (e.target === e.currentTarget) closePlayer();
           }}
         >
-          <div className="flex max-h-full w-full max-w-[min(92vw,calc((100dvh-140px)*9/16))] flex-col gap-3">
+          <div className="relative flex max-h-full w-full max-w-[min(92vw,calc((100dvh-140px)*9/16))] flex-col gap-3">
             <video
+              onLoadStart={() => setPlayerBuffering(true)}
+              onWaiting={() => setPlayerBuffering(true)}
+              onPlaying={() => setPlayerBuffering(false)}
+              onPause={() => setPlayerBuffering(false)}
               ref={playerRef}
               onLoadedMetadata={(e) => {
                 // A different reel than the warmed-up one was opened: start once it has loaded.
@@ -377,6 +437,10 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
               playsInline
               className="aspect-[9/16] w-full bg-black"
             />
+            {/* Covers only the picture, not the title underneath. */}
+            <span className="pointer-events-none absolute inset-x-0 top-0 aspect-[9/16]">
+              <BufferingOverlay show={open !== null && playerBuffering} />
+            </span>
             {current.title && <p className="line-clamp-2 text-sm font-bold text-on-dark">{current.title}</p>}
           </div>
           <button
@@ -386,7 +450,15 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
             aria-label="Close"
             className="absolute right-4 top-4 flex size-12 items-center justify-center border-[1.5px] border-on-dark text-on-dark hover:bg-on-dark hover:text-navy-900"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
               <path d="M6 6l12 12M18 6L6 18" />
             </svg>
           </button>

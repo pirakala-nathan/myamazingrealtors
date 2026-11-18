@@ -1,11 +1,8 @@
 "use client";
 
 import { useActionState, useRef, useState, useTransition } from "react";
-import {
-  saveManualListing,
-  uploadListingPhoto,
-  type AdminFormState,
-} from "@/app/actions/admin";
+import { saveManualListing, uploadListingPhoto, type AdminFormState } from "@/app/actions/admin";
+import { HouseLoader } from "@/components/ui/house-loader";
 import { MAX_MANUAL_PHOTOS, type Listing } from "@/lib/listings/types";
 
 const initial: AdminFormState = { status: "idle" };
@@ -24,11 +21,7 @@ async function resize(file: File): Promise<Blob> {
   canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
   return new Promise((resolve, reject) =>
-    canvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error("encode failed"))),
-      "image/jpeg",
-      0.85,
-    ),
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("encode failed"))), "image/jpeg", 0.85),
   );
 }
 
@@ -53,10 +46,7 @@ function Field({
       </label>
       {children}
       {error && (
-        <p
-          id={`m-${name}-error`}
-          className="text-sm font-semibold text-red-800"
-        >
+        <p id={`m-${name}-error`} className="text-sm font-semibold text-red-800">
           {error}
         </p>
       )}
@@ -64,13 +54,7 @@ function Field({
   );
 }
 
-export function ManualListingForm({
-  listing,
-  cities,
-}: {
-  listing?: Listing;
-  cities: readonly string[];
-}) {
+export function ManualListingForm({ listing, cities }: { listing?: Listing; cities: readonly string[] }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [photos, setPhotos] = useState<string[]>(listing?.photos ?? []);
   const [status, setStatus] = useState<string>(listing?.status ?? "sold");
@@ -92,24 +76,19 @@ export function ManualListingForm({
       return next;
     });
 
-  const [state, action] = useActionState(
-    async (prev: AdminFormState, fd: FormData) => {
-      const result = await saveManualListing(prev, fd);
-      if (result.status === "success" && !listing) {
-        formRef.current?.reset();
-        setPhotos([]);
-        setStatus("sold");
-        setUpload(null);
-      }
-      return result;
-    },
-    initial,
-  );
+  const [state, action] = useActionState(async (prev: AdminFormState, fd: FormData) => {
+    const result = await saveManualListing(prev, fd);
+    if (result.status === "success" && !listing) {
+      formRef.current?.reset();
+      setPhotos([]);
+      setStatus("sold");
+      setUpload(null);
+    }
+    return result;
+  }, initial);
 
   const err = (name: string) =>
-    state.fieldErrors?.[name]
-      ? { "aria-invalid": true, "aria-describedby": `m-${name}-error` }
-      : {};
+    state.fieldErrors?.[name] ? { "aria-invalid": true, "aria-describedby": `m-${name}-error` } : {};
 
   async function addPhotos(files: FileList | null) {
     if (!files?.length) return;
@@ -162,13 +141,7 @@ export function ManualListingForm({
       }}
       className="flex flex-col gap-6"
     >
-      {listing && (
-        <input
-          type="hidden"
-          name="originalMlsNumber"
-          value={listing.mlsNumber}
-        />
-      )}
+      {listing && <input type="hidden" name="originalMlsNumber" value={listing.mlsNumber} />}
       <input type="hidden" name="photos" value={JSON.stringify(photos)} />
 
       <div className="grid gap-5 sm:grid-cols-2">
@@ -209,12 +182,7 @@ export function ManualListingForm({
             {...err("mlsNumber")}
           />
         </Field>
-        <Field
-          name="postalCode"
-          label="Postal code"
-          hint="(optional)"
-          state={state}
-        >
+        <Field name="postalCode" label="Postal code" hint="(optional)" state={state}>
           <input
             id="m-postalCode"
             name="postalCode"
@@ -265,12 +233,7 @@ export function ManualListingForm({
             {...err("listPrice")}
           />
         </Field>
-        <Field
-          name="propertyType"
-          label="Property type"
-          hint="(optional)"
-          state={state}
-        >
+        <Field name="propertyType" label="Property type" hint="(optional)" state={state}>
           <input
             id="m-propertyType"
             name="propertyType"
@@ -293,12 +256,7 @@ export function ManualListingForm({
             ))}
           </datalist>
         </Field>
-        <Field
-          name="bedrooms"
-          label="Bedrooms"
-          hint="(e.g. 3 + 1)"
-          state={state}
-        >
+        <Field name="bedrooms" label="Bedrooms" hint="(e.g. 3 + 1)" state={state}>
           <input
             id="m-bedrooms"
             name="bedrooms"
@@ -317,18 +275,8 @@ export function ManualListingForm({
             {...err("bathrooms")}
           />
         </Field>
-        <Field
-          name="sizeRange"
-          label="Size (sq ft)"
-          hint="(optional, e.g. 1500-2000)"
-          state={state}
-        >
-          <input
-            id="m-sizeRange"
-            name="sizeRange"
-            defaultValue={listing?.sizeRange ?? ""}
-            className={input}
-          />
+        <Field name="sizeRange" label="Size (sq ft)" hint="(optional, e.g. 1500-2000)" state={state}>
+          <input id="m-sizeRange" name="sizeRange" defaultValue={listing?.sizeRange ?? ""} className={input} />
         </Field>
         {sold && (
           <label className="flex items-center gap-3 self-end py-3 text-sm font-bold">
@@ -343,12 +291,7 @@ export function ManualListingForm({
         )}
       </div>
 
-      <Field
-        name="description"
-        label="Description"
-        hint="(optional)"
-        state={state}
-      >
+      <Field name="description" label="Description" hint="(optional)" state={state}>
         <textarea
           id="m-description"
           name="description"
@@ -362,15 +305,13 @@ export function ManualListingForm({
         <span className="text-sm font-bold">
           Photos{" "}
           <span className="font-medium text-muted">
-            ({photos.length} of {MAX_MANUAL_PHOTOS}; the first photo is the
-            cover; use photos you have the rights to)
+            ({photos.length} of {MAX_MANUAL_PHOTOS}; the first photo is the cover; use photos you have the rights to)
           </span>
         </span>
         {photos.length > 0 && (
           <>
             <p className="text-xs text-muted">
-              Drag photos to put them in order, or use the ← → buttons. The
-              first one is the cover.
+              Drag photos to put them in order, or use the ← → buttons. The first one is the cover.
             </p>
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {photos.map((url, i) => (
@@ -395,11 +336,7 @@ export function ManualListingForm({
                   <div className="relative aspect-[4/3] overflow-hidden bg-cloud-300">
                     {/* Admin preview of an uploaded photo. */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={url}
-                      alt={`Photo ${i + 1}`}
-                      className="size-full object-cover"
-                    />
+                    <img src={url} alt={`Photo ${i + 1}`} className="size-full object-cover" />
                     <span className="absolute left-2 top-2 bg-navy-900 px-2 py-1 text-[11px] font-extrabold uppercase tracking-wider text-aqua-400">
                       {i === 0 ? "Cover" : i + 1}
                     </span>
@@ -427,9 +364,7 @@ export function ManualListingForm({
                       <button
                         type="button"
                         className="border border-navy-900 px-2 py-1"
-                        onClick={() =>
-                          setPhotos((p) => [url, ...p.filter((u) => u !== url)])
-                        }
+                        onClick={() => setPhotos((p) => [url, ...p.filter((u) => u !== url)])}
                       >
                         Make cover
                       </button>
@@ -437,9 +372,7 @@ export function ManualListingForm({
                     <button
                       type="button"
                       className="border border-red-800 px-2 py-1 text-red-800"
-                      onClick={() =>
-                        setPhotos((p) => p.filter((u) => u !== url))
-                      }
+                      onClick={() => setPhotos((p) => p.filter((u) => u !== url))}
                     >
                       Remove
                     </button>
@@ -450,11 +383,16 @@ export function ManualListingForm({
           </>
         )}
         <label className="inline-flex min-h-12 cursor-pointer items-center justify-center self-start border-[1.5px] border-navy-900 px-6 font-bold hover:bg-navy-900 hover:text-on-dark has-[:disabled]:cursor-wait has-[:disabled]:opacity-60">
-          {uploading
-            ? `Uploading ${upload!.done + 1} of ${upload!.total}…`
-            : photos.length >= MAX_MANUAL_PHOTOS
-              ? `${MAX_MANUAL_PHOTOS} photos added (maximum)`
-              : "Add photos"}
+          {uploading ? (
+            <span className="flex items-center gap-2">
+              <HouseLoader size="sm" showLabel={false} label="Uploading photos" className="[&_svg]:w-6" />
+              {`Uploading ${upload!.done + 1} of ${upload!.total}…`}
+            </span>
+          ) : photos.length >= MAX_MANUAL_PHOTOS ? (
+            `${MAX_MANUAL_PHOTOS} photos added (maximum)`
+          ) : (
+            "Add photos"
+          )}
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp,image/heic"
@@ -468,18 +406,12 @@ export function ManualListingForm({
           />
         </label>
         {upload?.errors.map((m) => (
-          <p
-            key={m}
-            role="alert"
-            className="text-sm font-semibold text-red-800"
-          >
+          <p key={m} role="alert" className="text-sm font-semibold text-red-800">
             {m}
           </p>
         ))}
         {state.fieldErrors?.photos && (
-          <p className="text-sm font-semibold text-red-800">
-            {state.fieldErrors.photos[0]}
-          </p>
+          <p className="text-sm font-semibold text-red-800">{state.fieldErrors.photos[0]}</p>
         )}
       </div>
 

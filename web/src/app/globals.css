@@ -196,6 +196,67 @@
   to { opacity: 0; visibility: hidden; }
 }
 
+/*
+ * House loader (src/components/ui/house-loader.tsx): the intro's logo on a 2.4s loop.
+ * The hands rise into a roof, the windows light one by one, everything holds, then softly resets.
+ */
+.house-loader-light {
+  --hl-off: var(--color-cloud-300);
+  --hl-on: var(--color-navy-900);
+  --hl-label: var(--color-muted);
+}
+.house-loader-dark {
+  --hl-off: var(--color-navy-700);
+  --hl-on: #ffffff;
+  --hl-label: #b8c4cc;
+}
+.hl-hand {
+  transform-box: fill-box;
+  animation: hl-hand 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+.hl-hand-l {
+  transform-origin: 100% 0;
+  --hl-from: translate(-14%, 24%) rotate(-12deg);
+}
+.hl-hand-r {
+  transform-origin: 0 0;
+  --hl-from: translate(14%, 24%) rotate(12deg);
+}
+.hl-window {
+  fill: var(--hl-off);
+  animation: hl-light 2.4s ease-out infinite;
+}
+.hl-window-1 { animation-delay: 0.1s; }
+.hl-window-2 { animation-delay: 0.25s; }
+.hl-window-3 { animation-delay: 0.4s; }
+.hl-window-4 { animation-delay: 0.55s; }
+.hl-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--hl-label);
+}
+@keyframes hl-hand {
+  0% { opacity: 0; transform: var(--hl-from); }
+  30%, 82% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: none; }
+}
+@keyframes hl-light {
+  0%, 25% { fill: var(--hl-off); }
+  38%, 80% { fill: var(--hl-on); filter: drop-shadow(0 0 2px rgba(0, 178, 219, 0.7)); }
+  100% { fill: var(--hl-off); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hl-hand,
+  .hl-window {
+    animation: none;
+  }
+  .hl-window {
+    fill: var(--hl-on);
+  }
+}
+
 /* Homepage search photos (src/components/home/photo-rotator.tsx): cross-fade in, then a slow zoom. */
 .photo-fade-in {
   animation: photo-fade-in 1.2s ease-out both;

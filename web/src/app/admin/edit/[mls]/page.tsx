@@ -1,3 +1,4 @@
+import { HouseLoader } from "@/components/ui/house-loader";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -39,7 +40,7 @@ async function Editor({ params }: { params: PageProps<"/admin/edit/[mls]">["para
 
 export default function EditListingPage({ params }: PageProps<"/admin/edit/[mls]">) {
   return (
-    <Suspense fallback={<p className="text-muted">Loading…</p>}>
+    <Suspense fallback={<HouseLoader className="py-16" />}>
       <Editor params={params} />
     </Suspense>
   );

@@ -1,3 +1,4 @@
+import { HouseLoader } from "@/components/ui/house-loader";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -106,7 +107,7 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
 
 export default function AdminPage({ searchParams }: PageProps<"/admin">) {
   return (
-    <Suspense fallback={<p className="text-muted">Loading…</p>}>
+    <Suspense fallback={<HouseLoader className="py-16" />}>
       <Dashboard searchParams={searchParams} />
     </Suspense>
   );

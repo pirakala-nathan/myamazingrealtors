@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { HouseLoader } from "@/components/ui/house-loader";
 import { CONSENT_TEXT, type FormState } from "@/lib/forms";
 
 const control =
@@ -162,7 +163,14 @@ export function SubmitButton({ pending, children }: { pending: boolean; children
       disabled={pending}
       className="inline-flex min-h-13 w-full items-center justify-center rounded-none bg-navy-900 px-8 py-4 text-base font-bold text-on-dark transition-colors hover:bg-navy-700 hover:text-aqua-300 disabled:cursor-wait disabled:opacity-70 sm:w-auto"
     >
-      {pending ? "Sending…" : children}
+      {pending ? (
+        <span className="flex items-center gap-3">
+          <HouseLoader tone="dark" size="sm" showLabel={false} label="Sending" className="[&_svg]:w-7" />
+          Sending…
+        </span>
+      ) : (
+        children
+      )}
     </button>
   );
 }

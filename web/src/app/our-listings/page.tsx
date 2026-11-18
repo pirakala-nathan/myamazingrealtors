@@ -1,3 +1,4 @@
+import { HouseLoader } from "@/components/ui/house-loader";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -119,7 +120,7 @@ export default function OurListingsPage({ searchParams }: PageProps<"/our-listin
       </PageHeader>
 
       <section className="container-site flex flex-col gap-16 pb-20 md:pb-26">
-        <Suspense fallback={<p className="text-muted">Loading listings…</p>}>
+        <Suspense fallback={<HouseLoader label="Loading listings" className="py-16" />}>
           <Results searchParams={searchParams} />
         </Suspense>
       </section>
