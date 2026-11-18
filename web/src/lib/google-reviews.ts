@@ -1,11 +1,12 @@
 import "server-only";
 import { cacheLife } from "next/cache";
+import { site } from "@/lib/site";
 
 /**
  * PK's Google rating and reviews, from Google's Places API (New) Place Details.
  * https://developers.google.com/maps/documentation/places/web-service/place-details
  *
- * Needs GOOGLE_PLACES_API_KEY and GOOGLE_PLACE_ID (the Google Business Profile's place ID).
+ * Needs GOOGLE_PLACES_API_KEY. The place ID is site.googlePlaceId (GOOGLE_PLACE_ID overrides it).
  * Returns null when they are missing or the request fails, so pages fall back to placeholders.
  *
  * Google's rules for showing this data (Places API policies):
@@ -56,7 +57,7 @@ export async function getGoogleReviews(): Promise<GoogleReviews | null> {
   cacheLife({ stale: 3600, revalidate: 6 * 3600, expire: 24 * 3600 });
 
   const key = process.env.GOOGLE_PLACES_API_KEY;
-  const placeId = process.env.GOOGLE_PLACE_ID;
+  const placeId = process.env.GOOGLE_PLACE_ID || site.googlePlaceId;
   if (!key || !placeId) return null;
 
   try {

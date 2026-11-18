@@ -49,16 +49,16 @@ export const recentSales: RecentSale[] = [
 ];
 
 export const stats = [
-  { value: "$[##]M", label: "In career sales", detail: "Across Durham & the East GTA" },
-  { value: "[###]%", label: "Average sale-to-list", detail: "Over the last 24 months" },
-  { value: "[##]", label: "Average days on market", detail: "vs. [##] for the region" },
+  { value: "$75M+", label: "In career sales", detail: "Across Durham & the East GTA" },
+  { value: "150+", label: "Homes sold", detail: "For buyers and sellers" },
+  { value: "12+", label: "Years in real estate", detail: "Including development and new builds" },
   { value: "[#.#]★", label: "Google rating", detail: "From [##] client reviews" },
 ];
 
 /** Short stats beside PK's portrait in the hero. */
 export const heroStats = [
-  { value: "[##]+", label: "Years in real estate" },
-  { value: "[###]+", label: "Homes sold" },
+  { value: "12+", label: "Years in real estate" },
+  { value: "150+", label: "Homes sold" },
   { value: "[#.#]★", label: "Google rating" },
 ];
 

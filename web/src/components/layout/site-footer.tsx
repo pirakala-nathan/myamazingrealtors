@@ -24,7 +24,6 @@ export function SiteFooter() {
             <span className="eyebrow text-xs text-aqua-400">Explore</span>
             <Link href="/search" className="hover:text-aqua-300">Search homes</Link>
             <Link href="/home-evaluation" className="hover:text-aqua-300">Home valuation</Link>
-            <Link href="/blog" className="hover:text-aqua-300">Market insights</Link>
           </div>
           <div className="flex flex-col gap-2 text-[15px]">
             <span className="eyebrow text-xs text-aqua-400">Follow</span>

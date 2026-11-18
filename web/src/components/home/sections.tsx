@@ -3,6 +3,7 @@ import Image from "next/image";
 import { site } from "@/lib/site";
 import { insights, services, testimonials } from "@/lib/content/home";
 import { getGoogleReviews } from "@/lib/google-reviews";
+import { ReviewCarousel } from "@/components/home/review-carousel";
 import { ButtonLink } from "@/components/ui/button-link";
 
 const serviceIcons = {
@@ -125,7 +126,7 @@ function Stars({ rating }: { rating: number }) {
 
 export async function Testimonials() {
   const google = await getGoogleReviews();
-  const reviews = google?.reviews.slice(0, 3) ?? [];
+  const reviews = google?.reviews ?? [];
 
   return (
     <section className="container-site py-20 md:py-26">
@@ -139,59 +140,21 @@ export async function Testimonials() {
         )}
       </div>
 
-      {reviews.length > 0 ? (
-        <ul className="grid gap-5 md:grid-cols-3">
-          {reviews.map((r, i) => (
-            <li key={i}>
-              <figure className="flex h-full flex-col gap-4.5 border border-cloud-300 bg-mist-50 p-8">
-                <Stars rating={r.rating} />
-                <blockquote className="line-clamp-[8] font-display text-xl italic leading-snug">“{r.text}”</blockquote>
-                <figcaption className="mt-auto flex items-center gap-3 text-sm">
-                  {r.authorPhoto && (
-                    // Google-hosted profile photo; required author attribution, so shown as-is.
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={r.authorPhoto} alt="" width={36} height={36} className="size-9 rounded-full" referrerPolicy="no-referrer" />
-                  )}
-                  <span className="flex flex-col">
-                    {r.authorUri ? (
-                      <a href={r.authorUri} target="_blank" rel="noopener noreferrer" className="font-bold hover:text-aqua-700">
-                        {r.author}
-                      </a>
-                    ) : (
-                      <span className="font-bold">{r.author}</span>
-                    )}
-                    <span className="text-muted">
-                      {r.relativeTime}
-                      {r.reviewUri && (
-                        <>
-                          {" · "}
-                          <a href={r.reviewUri} target="_blank" rel="noopener noreferrer" className="underline hover:text-aqua-700">
-                            View on Google Maps
-                          </a>
-                        </>
-                      )}
-                    </span>
-                  </span>
-                </figcaption>
-              </figure>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <ul className="grid gap-5 md:grid-cols-3">
-          {testimonials.map((t, i) => (
-            <li key={i}>
-              <figure className="flex h-full flex-col gap-4.5 border border-cloud-300 bg-mist-50 p-8">
-                <Stars rating={5} />
-                <blockquote className="font-display text-2xl italic leading-snug">{t.quote}</blockquote>
-                <figcaption className="mt-auto text-sm font-bold">
-                  {t.name} <span className="font-medium text-muted">· {t.context}</span>
-                </figcaption>
-              </figure>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ReviewCarousel
+        reviews={
+          reviews.length > 0
+            ? reviews.map((r) => ({
+                text: r.text,
+                rating: r.rating,
+                author: r.author,
+                authorUri: r.authorUri,
+                authorPhoto: r.authorPhoto,
+                meta: r.relativeTime,
+                reviewUri: r.reviewUri,
+              }))
+            : testimonials.map((t) => ({ text: t.quote, rating: 5, author: t.name, meta: t.context }))
+        }
+      />
 
       {google && (
         <p className="mt-6 flex flex-col gap-2 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">

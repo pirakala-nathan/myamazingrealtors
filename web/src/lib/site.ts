@@ -18,14 +18,14 @@ export const site = {
   agent: {
     name: "PK Sithamparanathan",
     firstName: "PK",
-    title: "[Registration title]",
+    title: "Sales Representative",
     phone: "647.892.2124",
     phoneHref: "tel:+16478922124",
     smsHref: "sms:+16478922124",
     email: "pk@myamazingrealtors.com",
     photo: "/images/team/pk-sithamparanathan.jpg",
     intro:
-      "[One-paragraph intro: who PK is, years in real estate, the communities PK serves and what clients can expect.] Serving you with honesty & integrity.",
+      "An excellent negotiator with a proven track record, PK has been trading in real estate for over 12 years. Strong sales acumen and hands-on experience in real estate development and building mean you get sharp advice on value, condition and potential. Serving you with honesty & integrity.",
   },
 
   office: {
@@ -44,6 +44,9 @@ export const site = {
     youtube: null as string | null,
   },
 
+  /** Google Business Profile place ID, used for the live Google rating and reviews. GOOGLE_PLACE_ID overrides it. */
+  googlePlaceId: "ChIJx1bJv07R1IkRMjJOlbVNvr0",
+
   serviceAreas: ["Pickering", "Ajax", "Whitby", "Oshawa", "Scarborough", "Markham"],
 } as const;
 
@@ -61,6 +64,5 @@ export const mainNav: NavItem[] = [
   { label: "Sell", href: "/sell" },
   { label: "Listings", href: "/our-listings" },
   { label: "Communities", href: "/communities" },
-  { label: "Insights", href: "/blog" },
   { label: "Contact", href: "/contact" },
 ];
