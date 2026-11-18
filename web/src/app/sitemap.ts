@@ -8,7 +8,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: site.url, changeFrequency: "weekly", priority: 1 },
     { url: `${site.url}/our-listings`, changeFrequency: "daily", priority: 0.9 },
     { url: `${site.url}/home-evaluation`, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${site.url}/about`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${site.url}/buy`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${site.url}/sell`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${site.url}/contact`, changeFrequency: "yearly", priority: 0.7 },
+    { url: `${site.url}/privacy`, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${site.url}/terms`, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${site.url}/accessibility`, changeFrequency: "yearly", priority: 0.2 },
     ...listings
       .filter((l) => l.status !== "off-market")
       .map((l) => ({

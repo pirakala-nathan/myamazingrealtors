@@ -171,7 +171,7 @@ export function SubmitButton({ pending, children }: { pending: boolean; children
 export function PrivacyNote() {
   return (
     <p className="text-[13px] leading-relaxed text-muted">
-      Your details go only to {site.agent.firstName} and are never sold or shared. See the{" "}
+      Your details are used to reply to you (and, only if you opt in, to send updates) and are never sold. See the{" "}
       <Link href="/privacy" className="font-semibold underline">
         privacy policy
       </Link>

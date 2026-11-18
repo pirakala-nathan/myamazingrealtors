@@ -24,6 +24,7 @@ export const site = {
     smsHref: "sms:+16478922124",
     email: "pk@myamazingrealtors.com",
     photo: "/images/team/pk-sithamparanathan.jpg",
+    languages: ["English", "Tamil"],
     intro:
       "An excellent negotiator with a proven track record, PK has been trading in real estate for over 12 years. Strong sales acumen and hands-on experience in real estate development and building mean you get sharp advice on value, condition and potential. Serving you with honesty & integrity.",
   },
@@ -63,6 +64,6 @@ export const mainNav: NavItem[] = [
   { label: "Buy", href: "/buy" },
   { label: "Sell", href: "/sell" },
   { label: "Listings", href: "/our-listings" },
-  { label: "Communities", href: "/communities" },
+  // Communities returns once each city has real local content.
   { label: "Contact", href: "/contact" },
 ];

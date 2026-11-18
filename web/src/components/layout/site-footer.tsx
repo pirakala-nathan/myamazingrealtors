@@ -22,8 +22,12 @@ export function SiteFooter() {
           </div>
           <div className="flex flex-col gap-2 text-[15px]">
             <span className="eyebrow text-xs text-aqua-400">Explore</span>
-            <Link href="/search" className="hover:text-aqua-300">Search homes</Link>
+            <Link href="/about" className="hover:text-aqua-300">About PK</Link>
+            <Link href="/buy" className="hover:text-aqua-300">Buying</Link>
+            <Link href="/sell" className="hover:text-aqua-300">Selling</Link>
+            <Link href="/our-listings" className="hover:text-aqua-300">PK’s listings</Link>
             <Link href="/home-evaluation" className="hover:text-aqua-300">Home valuation</Link>
+            <Link href="/contact" className="hover:text-aqua-300">Contact</Link>
           </div>
           <div className="flex flex-col gap-2 text-[15px]">
             <span className="eyebrow text-xs text-aqua-400">Follow</span>
@@ -33,8 +37,8 @@ export function SiteFooter() {
         </div>
         <p className="border-t border-navy-600 pt-5 text-[12.5px] leading-relaxed text-on-dark-subtle">
           © {year} {site.name} · {site.brokerage.legalLine} Not intended to solicit buyers or sellers currently under
-          contract. The trademarks MLS®, Multiple Listing Service® and REALTOR® are owned by CREA. [MLS® data disclaimer
-          per data licence.] · <Link href="/privacy" className="underline">Privacy</Link> ·{" "}
+          contract. The trademarks MLS®, Multiple Listing Service® and REALTOR® are owned by CREA. Listing information
+          is deemed reliable but not guaranteed. · <Link href="/privacy" className="underline">Privacy</Link> ·{" "}
           <Link href="/terms" className="underline">Terms</Link> ·{" "}
           <Link href="/accessibility" className="underline">Accessibility</Link>
         </p>

@@ -28,6 +28,7 @@ export function realEstateAgentSchema() {
       postalCode: site.office.postalCode,
       addressCountry: site.office.country,
     },
+    knowsLanguage: site.agent.languages,
     areaServed: site.serviceAreas.map((name) => ({ "@type": "City", name })),
     parentOrganization: { "@type": "RealEstateAgent", name: `${site.brokerage.name}, Brokerage` },
     sameAs,

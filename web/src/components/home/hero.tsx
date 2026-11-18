@@ -125,22 +125,22 @@ export async function SearchSection() {
     <section className="container-site grid items-center gap-12 pb-20 pt-6 md:pb-26 lg:grid-cols-2 lg:gap-14">
       <div className="flex flex-col">
         <h2 className="font-display text-[clamp(2.5rem,4.6vw,3.5rem)] font-semibold leading-[1.02]">
-          Search every MLS® listing
+          Search {site.agent.firstName}’s listings
         </h2>
         <span aria-hidden="true" className="my-5 block h-[3px] w-14 bg-aqua-400" />
         <p className="max-w-[440px] text-base leading-relaxed text-body">
-          Homes for sale across Durham and the East GTA. Save a search and {site.agent.firstName} will send you new
-          matches.
+          Homes {site.agent.firstName} is selling now and recent sales across Durham and the East GTA. Looking for
+          something else? {site.agent.firstName} can send you new listings that match your search.
         </p>
-        <form action="/search" method="get" role="search" className="mt-7 flex max-w-[480px] flex-col gap-3 sm:flex-row sm:gap-0">
+        <form action="/our-listings" method="get" role="search" className="mt-7 flex max-w-[480px] flex-col gap-3 sm:flex-row sm:gap-0">
           <label htmlFor="home-search" className="sr-only">
-            Search homes by city, neighbourhood, address or MLS® number
+            Search {site.agent.firstName}’s listings by city, street or MLS® number
           </label>
           <input
             id="home-search"
             name="q"
             type="search"
-            placeholder="City, neighbourhood or MLS®#"
+            placeholder="City, street or MLS®#"
             className="min-h-13 min-w-0 flex-1 rounded-none border border-cloud-400 bg-white px-5 text-base text-ink placeholder:text-muted"
           />
           <button

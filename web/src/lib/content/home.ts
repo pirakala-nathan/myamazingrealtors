@@ -67,8 +67,8 @@ export const services = [
     icon: "search",
     title: "Buy a home",
     body: "New listings first, honest advice on value and a strong negotiator on your side.",
-    cta: "Start your search",
-    href: "/search",
+    cta: "Buying with PK",
+    href: "/buy",
   },
   {
     icon: "home",
