@@ -8,7 +8,7 @@ import { LookupError, MLS_PATTERN, lookupListing, sampleListing, slugFor } from 
 import { savePhoto } from "@/lib/listings/photos";
 import { site } from "@/lib/site";
 import { LISTINGS_TAG, deleteListing, findListing, saveListing } from "@/lib/listings/store";
-import { listingTitle, type Listing } from "@/lib/listings/types";
+import { MAX_MANUAL_PHOTOS, listingTitle, type Listing } from "@/lib/listings/types";
 
 export type AdminFormState = {
   status: "idle" | "success" | "error";
@@ -163,8 +163,12 @@ const manualSchema = z.object({
     .transform((v, ctx) => {
       try {
         const list = JSON.parse(v || "[]");
-        if (Array.isArray(list) && list.every((u) => typeof u === "string" && /^(https:\/\/|\/uploads\/)/.test(u))) {
-          return list.slice(0, 40) as string[];
+        if (Array.isArray(list) && list.every((u) => typeof u === "string" && /^(https:\/\/|\/uploads\/|\/images\/)/.test(u))) {
+          if (list.length > MAX_MANUAL_PHOTOS) {
+            ctx.addIssue({ code: "custom", message: `Up to ${MAX_MANUAL_PHOTOS} photos. Remove ${list.length - MAX_MANUAL_PHOTOS} first.` });
+            return z.NEVER;
+          }
+          return list as string[];
         }
       } catch {}
       ctx.addIssue({ code: "custom", message: "The photo list is invalid. Please re-add the photos." });

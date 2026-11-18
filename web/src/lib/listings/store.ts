@@ -1,7 +1,7 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { firebaseConfigured } from "@/lib/env";
-import type { Listing } from "./types";
+import { MAX_MANUAL_PHOTOS, type Listing } from "./types";
 
 /**
  * Listings live in the Firestore collection `listings`, one document per MLS® number.
@@ -36,11 +36,15 @@ async function firestore() {
   return db().collection(COLLECTION);
 }
 
+/** Hand-entered listings keep only their first photos (cover first), so older ones with more are trimmed automatically. */
+const trim = (l: Listing): Listing =>
+  l.source === "manual" && l.photos.length > MAX_MANUAL_PHOTOS ? { ...l, photos: l.photos.slice(0, MAX_MANUAL_PHOTOS) } : l;
+
 async function readAll(): Promise<Listing[]> {
-  if (localFileMode()) return (await fileStore()).read();
+  if (localFileMode()) return (await (await fileStore()).read()).map(trim);
   if (!firebaseConfigured()) return [];
   const snap = await (await firestore()).get();
-  return snap.docs.map((d) => d.data() as Listing);
+  return snap.docs.map((d) => trim(d.data() as Listing));
 }
 
 const order: Record<Listing["status"], number> = { active: 0, pending: 1, sold: 2, leased: 2, "off-market": 3 };

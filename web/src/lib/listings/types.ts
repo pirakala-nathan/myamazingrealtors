@@ -36,6 +36,9 @@ export type Listing = {
   addedAt: string;
 };
 
+/** Most photos a hand-entered listing can have. Extra photos on older listings are dropped when read. */
+export const MAX_MANUAL_PHOTOS = 6;
+
 export const statusLabel: Record<ListingStatus, string> = {
   active: "For sale",
   pending: "Sold conditional",

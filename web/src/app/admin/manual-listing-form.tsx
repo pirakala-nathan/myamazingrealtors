@@ -2,7 +2,7 @@
 
 import { useActionState, useRef, useState, useTransition } from "react";
 import { saveManualListing, uploadListingPhoto, type AdminFormState } from "@/app/actions/admin";
-import type { Listing } from "@/lib/listings/types";
+import { MAX_MANUAL_PHOTOS, type Listing } from "@/lib/listings/types";
 
 const initial: AdminFormState = { status: "idle" };
 const MAX_EDGE = 2000; // px; photos are resized in the browser before upload
@@ -76,8 +76,20 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
 
   async function addPhotos(files: FileList | null) {
     if (!files?.length) return;
-    const list = Array.from(files);
+    const room = MAX_MANUAL_PHOTOS - photos.length;
+    const list = Array.from(files).slice(0, Math.max(0, room));
     const errors: string[] = [];
+    if (files.length > list.length) {
+      errors.push(
+        room > 0
+          ? `Up to ${MAX_MANUAL_PHOTOS} photos per listing, so only the first ${room} you picked were added.`
+          : `This listing already has ${MAX_MANUAL_PHOTOS} photos. Remove one to add another.`,
+      );
+    }
+    if (list.length === 0) {
+      setUpload({ done: 0, total: 0, errors });
+      return;
+    }
     setUpload({ done: 0, total: list.length, errors });
     for (const [i, file] of list.entries()) {
       try {
@@ -178,7 +190,10 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
 
       <div className="flex flex-col gap-3">
         <span className="text-sm font-bold">
-          Photos <span className="font-medium text-muted">(the first photo is the cover; use photos you have the rights to)</span>
+          Photos{" "}
+          <span className="font-medium text-muted">
+            ({photos.length} of {MAX_MANUAL_PHOTOS}; the first photo is the cover; use photos you have the rights to)
+          </span>
         </span>
         {photos.length > 0 && (
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -209,12 +224,16 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
           </ul>
         )}
         <label className="inline-flex min-h-12 cursor-pointer items-center justify-center self-start border-[1.5px] border-navy-900 px-6 font-bold hover:bg-navy-900 hover:text-on-dark has-[:disabled]:cursor-wait has-[:disabled]:opacity-60">
-          {uploading ? `Uploading ${upload!.done + 1} of ${upload!.total}…` : "Add photos"}
+          {uploading
+            ? `Uploading ${upload!.done + 1} of ${upload!.total}…`
+            : photos.length >= MAX_MANUAL_PHOTOS
+              ? `${MAX_MANUAL_PHOTOS} photos added (maximum)`
+              : "Add photos"}
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp,image/heic"
             multiple
-            disabled={uploading}
+            disabled={uploading || photos.length >= MAX_MANUAL_PHOTOS}
             className="sr-only"
             onChange={(e) => {
               addPhotos(e.target.files);

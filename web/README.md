@@ -77,7 +77,7 @@ Set `GOOGLE_PLACES_API_KEY` (a server-only key restricted to "Places API (New)")
 ## Admin: listings added by hand
 
 Until PropTx is connected (or for a listing outside the feed), PK can use **Add a listing by hand** on `/admin`: address, city, MLS® number, status, price, details, description and photos.
-- Photos are resized in the browser to 2000px and uploaded one at a time to Firebase Storage under `listings/` (`FIREBASE_STORAGE_BUCKET`, e.g. `my-project.firebasestorage.app`). In local development without Firebase they go to `public/uploads/` (git-ignored). The first photo is the cover.
+- Up to 6 photos per listing (`MAX_MANUAL_PHOTOS`); older listings with more are trimmed to their first 6 automatically when read, and saved that way on the next edit. Photos are resized in the browser to 2000px and uploaded one at a time to Firebase Storage under `listings/` (`FIREBASE_STORAGE_BUCKET`, e.g. `my-project.firebasestorage.app`). In local development without Firebase they go to `public/uploads/` (git-ignored). The first photo is the cover.
 - Hand-entered listings show **Edit** instead of Refresh, so PropTx never overwrites them.
 - Sold and leased listings with photos replace the sample sales in the homepage "Recently sold" section (newest 4). The "Sold over asking" badge is a checkbox on the form. Sold prices are never shown.
 - Removing a listing or a photo leaves the photo file in Storage.
