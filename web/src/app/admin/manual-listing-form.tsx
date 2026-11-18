@@ -1,7 +1,11 @@
 "use client";
 
 import { useActionState, useRef, useState, useTransition } from "react";
-import { saveManualListing, uploadListingPhoto, type AdminFormState } from "@/app/actions/admin";
+import {
+  saveManualListing,
+  uploadListingPhoto,
+  type AdminFormState,
+} from "@/app/actions/admin";
 import { MAX_MANUAL_PHOTOS, type Listing } from "@/lib/listings/types";
 
 const initial: AdminFormState = { status: "idle" };
@@ -20,7 +24,11 @@ async function resize(file: File): Promise<Blob> {
   canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
   return new Promise((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("encode failed"))), "image/jpeg", 0.85),
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("encode failed"))),
+      "image/jpeg",
+      0.85,
+    ),
   );
 }
 
@@ -45,7 +53,10 @@ function Field({
       </label>
       {children}
       {error && (
-        <p id={`m-${name}-error`} className="text-sm font-semibold text-red-800">
+        <p
+          id={`m-${name}-error`}
+          className="text-sm font-semibold text-red-800"
+        >
           {error}
         </p>
       )}
@@ -53,26 +64,52 @@ function Field({
   );
 }
 
-export function ManualListingForm({ listing, cities }: { listing?: Listing; cities: readonly string[] }) {
+export function ManualListingForm({
+  listing,
+  cities,
+}: {
+  listing?: Listing;
+  cities: readonly string[];
+}) {
   const formRef = useRef<HTMLFormElement>(null);
   const [photos, setPhotos] = useState<string[]>(listing?.photos ?? []);
   const [status, setStatus] = useState<string>(listing?.status ?? "sold");
-  const [upload, setUpload] = useState<{ done: number; total: number; errors: string[] } | null>(null);
+  const [upload, setUpload] = useState<{
+    done: number;
+    total: number;
+    errors: string[];
+  } | null>(null);
   const [submitting, startSubmit] = useTransition();
+  const [dragging, setDragging] = useState<number | null>(null);
 
-  const [state, action] = useActionState(async (prev: AdminFormState, fd: FormData) => {
-    const result = await saveManualListing(prev, fd);
-    if (result.status === "success" && !listing) {
-      formRef.current?.reset();
-      setPhotos([]);
-      setStatus("sold");
-      setUpload(null);
-    }
-    return result;
-  }, initial);
+  /** Moves the photo at `from` to position `to` (0 is the cover). */
+  const movePhoto = (from: number, to: number) =>
+    setPhotos((p) => {
+      if (to < 0 || to >= p.length) return p;
+      const next = [...p];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+
+  const [state, action] = useActionState(
+    async (prev: AdminFormState, fd: FormData) => {
+      const result = await saveManualListing(prev, fd);
+      if (result.status === "success" && !listing) {
+        formRef.current?.reset();
+        setPhotos([]);
+        setStatus("sold");
+        setUpload(null);
+      }
+      return result;
+    },
+    initial,
+  );
 
   const err = (name: string) =>
-    state.fieldErrors?.[name] ? { "aria-invalid": true, "aria-describedby": `m-${name}-error` } : {};
+    state.fieldErrors?.[name]
+      ? { "aria-invalid": true, "aria-describedby": `m-${name}-error` }
+      : {};
 
   async function addPhotos(files: FileList | null) {
     if (!files?.length) return;
@@ -95,7 +132,12 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
       try {
         const blob = await resize(file);
         const fd = new FormData();
-        fd.append("photo", new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" }));
+        fd.append(
+          "photo",
+          new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", {
+            type: "image/jpeg",
+          }),
+        );
         const res = await uploadListingPhoto(fd);
         if (res.url) setPhotos((p) => [...p, res.url!]);
         else errors.push(res.error ?? `${file.name} couldn’t be uploaded.`);
@@ -120,15 +162,36 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
       }}
       className="flex flex-col gap-6"
     >
-      {listing && <input type="hidden" name="originalMlsNumber" value={listing.mlsNumber} />}
+      {listing && (
+        <input
+          type="hidden"
+          name="originalMlsNumber"
+          value={listing.mlsNumber}
+        />
+      )}
       <input type="hidden" name="photos" value={JSON.stringify(photos)} />
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field name="street" label="Street address" state={state}>
-          <input id="m-street" name="street" defaultValue={listing?.street ?? ""} placeholder="27 Aldgate Crescent" className={input} {...err("street")} />
+          <input
+            id="m-street"
+            name="street"
+            defaultValue={listing?.street ?? ""}
+            placeholder="27 Aldgate Crescent"
+            className={input}
+            {...err("street")}
+          />
         </Field>
         <Field name="city" label="City" state={state}>
-          <input id="m-city" name="city" list="m-city-list" defaultValue={listing?.city ?? ""} placeholder="Pickering" className={input} {...err("city")} />
+          <input
+            id="m-city"
+            name="city"
+            list="m-city-list"
+            defaultValue={listing?.city ?? ""}
+            placeholder="Pickering"
+            className={input}
+            {...err("city")}
+          />
           <datalist id="m-city-list">
             {cities.map((c) => (
               <option key={c} value={c} />
@@ -136,13 +199,38 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
           </datalist>
         </Field>
         <Field name="mlsNumber" label="MLS® number" state={state}>
-          <input id="m-mlsNumber" name="mlsNumber" defaultValue={listing?.mlsNumber ?? ""} placeholder="E12345678" autoCapitalize="characters" className={`${input} uppercase`} {...err("mlsNumber")} />
+          <input
+            id="m-mlsNumber"
+            name="mlsNumber"
+            defaultValue={listing?.mlsNumber ?? ""}
+            placeholder="E12345678"
+            autoCapitalize="characters"
+            className={`${input} uppercase`}
+            {...err("mlsNumber")}
+          />
         </Field>
-        <Field name="postalCode" label="Postal code" hint="(optional)" state={state}>
-          <input id="m-postalCode" name="postalCode" defaultValue={listing?.postalCode ?? ""} className={`${input} uppercase`} {...err("postalCode")} />
+        <Field
+          name="postalCode"
+          label="Postal code"
+          hint="(optional)"
+          state={state}
+        >
+          <input
+            id="m-postalCode"
+            name="postalCode"
+            defaultValue={listing?.postalCode ?? ""}
+            className={`${input} uppercase`}
+            {...err("postalCode")}
+          />
         </Field>
         <Field name="status" label="Status" state={state}>
-          <select id="m-status" name="status" value={status} onChange={(e) => setStatus(e.target.value)} className={input}>
+          <select
+            id="m-status"
+            name="status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className={input}
+          >
             <option value="active">For sale (active)</option>
             <option value="pending">Sold conditional</option>
             <option value="sold">Sold</option>
@@ -151,77 +239,215 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
           </select>
         </Field>
         <Field name="transactionType" label="Type" state={state}>
-          <select id="m-transactionType" name="transactionType" defaultValue={listing?.transactionType ?? "For Sale"} className={input}>
+          <select
+            id="m-transactionType"
+            name="transactionType"
+            defaultValue={listing?.transactionType ?? "For Sale"}
+            className={input}
+          >
             <option>For Sale</option>
             <option>For Lease</option>
           </select>
         </Field>
-        <Field name="listPrice" label="List price" hint={sold ? "(shown only while for sale)" : "(per month for leases)"} state={state}>
-          <input id="m-listPrice" name="listPrice" inputMode="numeric" defaultValue={listing?.listPrice ?? ""} placeholder="899900" className={input} {...err("listPrice")} />
+        <Field
+          name="listPrice"
+          label="List price"
+          hint={sold ? "(shown only while for sale)" : "(per month for leases)"}
+          state={state}
+        >
+          <input
+            id="m-listPrice"
+            name="listPrice"
+            inputMode="numeric"
+            defaultValue={listing?.listPrice ?? ""}
+            placeholder="899900"
+            className={input}
+            {...err("listPrice")}
+          />
         </Field>
-        <Field name="propertyType" label="Property type" hint="(optional)" state={state}>
-          <input id="m-propertyType" name="propertyType" list="m-type-list" defaultValue={listing?.propertyType ?? ""} placeholder="Detached" className={input} />
+        <Field
+          name="propertyType"
+          label="Property type"
+          hint="(optional)"
+          state={state}
+        >
+          <input
+            id="m-propertyType"
+            name="propertyType"
+            list="m-type-list"
+            defaultValue={listing?.propertyType ?? ""}
+            placeholder="Detached"
+            className={input}
+          />
           <datalist id="m-type-list">
-            {["Detached", "Semi-Detached", "Freehold Townhouse", "Condo Townhouse", "Condo Apartment", "Link", "Bungalow"].map((t) => (
+            {[
+              "Detached",
+              "Semi-Detached",
+              "Freehold Townhouse",
+              "Condo Townhouse",
+              "Condo Apartment",
+              "Link",
+              "Bungalow",
+            ].map((t) => (
               <option key={t} value={t} />
             ))}
           </datalist>
         </Field>
-        <Field name="bedrooms" label="Bedrooms" hint="(e.g. 3 + 1)" state={state}>
-          <input id="m-bedrooms" name="bedrooms" defaultValue={listing?.bedrooms ?? ""} className={input} {...err("bedrooms")} />
+        <Field
+          name="bedrooms"
+          label="Bedrooms"
+          hint="(e.g. 3 + 1)"
+          state={state}
+        >
+          <input
+            id="m-bedrooms"
+            name="bedrooms"
+            defaultValue={listing?.bedrooms ?? ""}
+            className={input}
+            {...err("bedrooms")}
+          />
         </Field>
         <Field name="bathrooms" label="Bathrooms" state={state}>
-          <input id="m-bathrooms" name="bathrooms" inputMode="decimal" defaultValue={listing?.bathrooms ?? ""} className={input} {...err("bathrooms")} />
+          <input
+            id="m-bathrooms"
+            name="bathrooms"
+            inputMode="decimal"
+            defaultValue={listing?.bathrooms ?? ""}
+            className={input}
+            {...err("bathrooms")}
+          />
         </Field>
-        <Field name="sizeRange" label="Size (sq ft)" hint="(optional, e.g. 1500-2000)" state={state}>
-          <input id="m-sizeRange" name="sizeRange" defaultValue={listing?.sizeRange ?? ""} className={input} />
+        <Field
+          name="sizeRange"
+          label="Size (sq ft)"
+          hint="(optional, e.g. 1500-2000)"
+          state={state}
+        >
+          <input
+            id="m-sizeRange"
+            name="sizeRange"
+            defaultValue={listing?.sizeRange ?? ""}
+            className={input}
+          />
         </Field>
         {sold && (
           <label className="flex items-center gap-3 self-end py-3 text-sm font-bold">
-            <input type="checkbox" name="soldOverAsking" defaultChecked={listing?.soldOverAsking ?? false} className="size-5 accent-navy-900" />
+            <input
+              type="checkbox"
+              name="soldOverAsking"
+              defaultChecked={listing?.soldOverAsking ?? false}
+              className="size-5 accent-navy-900"
+            />
             Show a “Sold over asking” badge
           </label>
         )}
       </div>
 
-      <Field name="description" label="Description" hint="(optional)" state={state}>
-        <textarea id="m-description" name="description" rows={5} defaultValue={listing?.description ?? ""} className={input} />
+      <Field
+        name="description"
+        label="Description"
+        hint="(optional)"
+        state={state}
+      >
+        <textarea
+          id="m-description"
+          name="description"
+          rows={5}
+          defaultValue={listing?.description ?? ""}
+          className={input}
+        />
       </Field>
 
       <div className="flex flex-col gap-3">
         <span className="text-sm font-bold">
           Photos{" "}
           <span className="font-medium text-muted">
-            ({photos.length} of {MAX_MANUAL_PHOTOS}; the first photo is the cover; use photos you have the rights to)
+            ({photos.length} of {MAX_MANUAL_PHOTOS}; the first photo is the
+            cover; use photos you have the rights to)
           </span>
         </span>
         {photos.length > 0 && (
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {photos.map((url, i) => (
-              <li key={url} className="flex flex-col gap-1.5">
-                <div className="relative aspect-[4/3] overflow-hidden bg-cloud-300">
-                  {/* Admin preview of an uploaded photo. */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={url} alt={`Photo ${i + 1}`} className="size-full object-cover" />
-                  {i === 0 && (
+          <>
+            <p className="text-xs text-muted">
+              Drag photos to put them in order, or use the ← → buttons. The
+              first one is the cover.
+            </p>
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              {photos.map((url, i) => (
+                <li
+                  key={url}
+                  draggable
+                  onDragStart={(e) => {
+                    setDragging(i);
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (dragging !== null && dragging !== i) {
+                      movePhoto(dragging, i);
+                      setDragging(i);
+                    }
+                  }}
+                  onDragEnd={() => setDragging(null)}
+                  onDrop={(e) => e.preventDefault()}
+                  className={`flex cursor-grab flex-col gap-1.5 transition-opacity active:cursor-grabbing ${dragging === i ? "opacity-40" : ""}`}
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-cloud-300">
+                    {/* Admin preview of an uploaded photo. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt={`Photo ${i + 1}`}
+                      className="size-full object-cover"
+                    />
                     <span className="absolute left-2 top-2 bg-navy-900 px-2 py-1 text-[11px] font-extrabold uppercase tracking-wider text-aqua-400">
-                      Cover
+                      {i === 0 ? "Cover" : i + 1}
                     </span>
-                  )}
-                </div>
-                <div className="flex gap-1.5 text-xs font-bold">
-                  {i > 0 && (
-                    <button type="button" className="border border-navy-900 px-2 py-1" onClick={() => setPhotos((p) => [url, ...p.filter((u) => u !== url)])}>
-                      Make cover
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 text-xs font-bold">
+                    <button
+                      type="button"
+                      disabled={i === 0}
+                      aria-label={`Move photo ${i + 1} earlier`}
+                      className="min-w-8 border border-navy-900 px-2 py-1 disabled:opacity-30"
+                      onClick={() => movePhoto(i, i - 1)}
+                    >
+                      ←
                     </button>
-                  )}
-                  <button type="button" className="border border-red-800 px-2 py-1 text-red-800" onClick={() => setPhotos((p) => p.filter((u) => u !== url))}>
-                    Remove
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+                    <button
+                      type="button"
+                      disabled={i === photos.length - 1}
+                      aria-label={`Move photo ${i + 1} later`}
+                      className="min-w-8 border border-navy-900 px-2 py-1 disabled:opacity-30"
+                      onClick={() => movePhoto(i, i + 1)}
+                    >
+                      →
+                    </button>
+                    {i > 0 && (
+                      <button
+                        type="button"
+                        className="border border-navy-900 px-2 py-1"
+                        onClick={() =>
+                          setPhotos((p) => [url, ...p.filter((u) => u !== url)])
+                        }
+                      >
+                        Make cover
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="border border-red-800 px-2 py-1 text-red-800"
+                      onClick={() =>
+                        setPhotos((p) => p.filter((u) => u !== url))
+                      }
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
         <label className="inline-flex min-h-12 cursor-pointer items-center justify-center self-start border-[1.5px] border-navy-900 px-6 font-bold hover:bg-navy-900 hover:text-on-dark has-[:disabled]:cursor-wait has-[:disabled]:opacity-60">
           {uploading
@@ -242,11 +468,19 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
           />
         </label>
         {upload?.errors.map((m) => (
-          <p key={m} role="alert" className="text-sm font-semibold text-red-800">
+          <p
+            key={m}
+            role="alert"
+            className="text-sm font-semibold text-red-800"
+          >
             {m}
           </p>
         ))}
-        {state.fieldErrors?.photos && <p className="text-sm font-semibold text-red-800">{state.fieldErrors.photos[0]}</p>}
+        {state.fieldErrors?.photos && (
+          <p className="text-sm font-semibold text-red-800">
+            {state.fieldErrors.photos[0]}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -258,7 +492,10 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
           {submitting ? "Saving…" : listing ? "Save changes" : "Add listing"}
         </button>
         {state.message && (
-          <p role={state.status === "error" ? "alert" : "status"} className={`text-sm font-semibold ${state.status === "error" ? "text-red-800" : "text-aqua-700"}`}>
+          <p
+            role={state.status === "error" ? "alert" : "status"}
+            className={`text-sm font-semibold ${state.status === "error" ? "text-red-800" : "text-aqua-700"}`}
+          >
             {state.message}
           </p>
         )}

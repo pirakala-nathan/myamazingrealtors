@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getListings } from "@/lib/listings/store";
 import { listingTitle, statusLabel } from "@/lib/listings/types";
 import { factsLine, isRemote } from "@/components/listings/listing-card";
+import { OverAskingBadge, isOverAsking } from "@/components/listings/status-badge";
 import { recentSales, stats as baseStats, formatPrice } from "@/lib/content/home";
 import { formatRating, getGoogleReviews } from "@/lib/google-reviews";
 import { ButtonLink } from "@/components/ui/button-link";
@@ -50,7 +51,9 @@ type SaleCard = {
   title: string;
   image: string;
   imageAlt: string;
+  /** Plain status text, or "over" for the special over-asking badge. */
   badge: string;
+  over: "sold" | "leased" | null;
   line: string;
 };
 
@@ -66,7 +69,8 @@ async function saleCards(): Promise<SaleCard[]> {
       title: l.street ?? l.city,
       image: l.photos[0],
       imageAlt: `Front of ${listingTitle(l)}`,
-      badge: l.soldOverAsking ? (l.status === "leased" ? "Leased over asking" : "Sold over asking") : statusLabel[l.status],
+      badge: statusLabel[l.status],
+      over: isOverAsking(l) ? (l.status === "leased" ? "leased" : "sold") : null,
       line: [l.city, factsLine(l)].filter(Boolean).join(" · "),
     }));
   }
@@ -76,7 +80,8 @@ async function saleCards(): Promise<SaleCard[]> {
     title: sale.address,
     image: sale.image,
     imageAlt: sale.imageAlt,
-    badge: sale.status === "sold-over-asking" ? "Sold over asking" : "Leased over asking",
+    badge: "Sold",
+    over: sale.status === "sold-over-asking" ? "sold" : "leased",
     line: `List price ${formatPrice(sale.listPrice)} · ${sale.city}`,
   }));
 }
@@ -104,9 +109,13 @@ export async function RecentSales() {
                   unoptimized={isRemote(c.image)}
                   className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                 />
-                <span className="absolute left-3.5 top-3.5 bg-navy-900 px-3 py-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-aqua-400">
-                  {c.badge}
-                </span>
+                {c.over ? (
+                  <OverAskingBadge leased={c.over === "leased"} className="absolute left-3.5 top-3.5" />
+                ) : (
+                  <span className="absolute left-3.5 top-3.5 bg-navy-900 px-3 py-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-aqua-400">
+                    {c.badge}
+                  </span>
+                )}
               </div>
               <h3 className="font-display text-[26px] font-bold group-hover:text-aqua-700">{c.title}</h3>
               <p className="text-sm text-muted">{c.line}</p>

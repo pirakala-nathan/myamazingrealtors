@@ -8,6 +8,7 @@ import { factsLine, isRemote, priceLine } from "@/components/listings/listing-ca
 import { getListingBySlug } from "@/lib/listings/store";
 import { listingTitle, statusLabel } from "@/lib/listings/types";
 import { site } from "@/lib/site";
+import { OverAskingBadge, isOverAsking } from "@/components/listings/status-badge";
 
 export async function generateMetadata({ params }: PageProps<"/listings/[slug]">): Promise<Metadata> {
   const listing = await getListingBySlug((await params).slug);
@@ -45,9 +46,12 @@ async function ListingDetail({ params }: { params: PageProps<"/listings/[slug]">
         <Link href="/our-listings" className="text-sm font-bold text-muted hover:text-aqua-700">
           ← All listings
         </Link>
-        <p className="eyebrow text-aqua-700">
-          {statusLabel[listing.status]} · {listing.city}
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          {isOverAsking(listing) && <OverAskingBadge leased={listing.status === "leased"} />}
+          <p className="eyebrow text-aqua-700">
+            {statusLabel[listing.status]} · {listing.city}
+          </p>
+        </div>
         <h1 className="font-display text-[clamp(2.5rem,5.4vw,4.75rem)] font-semibold leading-[0.95]">{title}</h1>
         <p className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
           {price && <span className="font-display text-4xl font-semibold">{price}</span>}
