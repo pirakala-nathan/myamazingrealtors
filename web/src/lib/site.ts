@@ -29,10 +29,10 @@ export const site = {
   },
 
   office: {
-    street: "300 Rossland Road East, Unit 404",
-    city: "Ajax",
+    street: "282 Consumers Road, Unit 10",
+    city: "North York",
     region: "ON",
-    postalCode: "L1Z 0K4",
+    postalCode: "M2J 1P8",
     country: "CA",
     phone: "905-239-9222",
     phoneHref: "tel:+19052399222",
