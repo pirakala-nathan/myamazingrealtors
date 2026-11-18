@@ -91,3 +91,107 @@
   letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
 }
+
+/*
+ * Intro: the opening animation (src/components/layout/intro.tsx), about 3 seconds.
+ * 0.1–0.9s  the logo's hands rise in from each side to form the roof
+ * 0.85–1.5s the four windows light up one at a time
+ * 1.3–1.9s  the wordmark fades up, while the loading bar fills (0.1–2.2s)
+ * 2.3–2.9s  the black screen fades out into the site
+ */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  animation: intro-out 0.6s ease-in 2.3s forwards;
+}
+.intro[data-skip] {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro {
+    display: none;
+  }
+}
+.intro-stage {
+  display: flex;
+  width: min(78vw, 440px);
+  flex-direction: column;
+  align-items: center;
+  gap: 2.25rem;
+}
+.intro-logo {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.intro-hand {
+  transform-box: fill-box;
+  opacity: 0;
+  animation: intro-hand 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s forwards;
+}
+.intro-hand-l {
+  transform-origin: 100% 0;
+  --intro-from: translate(-18%, 30%) rotate(-14deg);
+}
+.intro-hand-r {
+  transform-origin: 0 0;
+  --intro-from: translate(18%, 30%) rotate(14deg);
+}
+.intro-window {
+  fill: #1c1c1c;
+  animation: intro-light 0.35s ease-out forwards;
+}
+.intro-window-1 { animation-delay: 0.85s; }
+.intro-window-2 { animation-delay: 1s; }
+.intro-window-3 { animation-delay: 1.15s; }
+.intro-window-4 { animation-delay: 1.3s; }
+.intro-word {
+  opacity: 0;
+  transform: translateY(6px);
+  animation: intro-rise 0.6s ease-out 1.3s forwards;
+}
+.intro-bar {
+  width: 160px;
+  height: 2px;
+  overflow: hidden;
+  background: #1f2a30;
+}
+.intro-bar span {
+  display: block;
+  height: 100%;
+  background: #00b2db;
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: intro-load 2.1s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards;
+}
+.intro-label {
+  margin-top: -1.25rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #8a8b8e;
+}
+@keyframes intro-hand {
+  from { opacity: 0; transform: var(--intro-from); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes intro-light {
+  0% { fill: #1c1c1c; }
+  60% { fill: #ffffff; filter: drop-shadow(0 0 3px #00b2db); }
+  100% { fill: #ffffff; filter: drop-shadow(0 0 1.5px rgba(0, 178, 219, 0.6)); }
+}
+@keyframes intro-rise {
+  to { opacity: 1; transform: none; }
+}
+@keyframes intro-load {
+  to { transform: scaleX(1); }
+}
+@keyframes intro-out {
+  to { opacity: 0; visibility: hidden; }
+}

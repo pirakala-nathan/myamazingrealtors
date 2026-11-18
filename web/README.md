@@ -55,6 +55,19 @@ Access rules:
 
 Deploy the rules with the Firebase CLI from this folder: `firebase deploy --only firestore:rules,storage`.
 
+## Email alerts for form submissions
+
+Every form submission is saved in Firestore. Emailing PK about it needs [Resend](https://resend.com):
+- `RESEND_API_KEY`: an API key from Resend.
+- `RESEND_FROM`: the sender, on a domain verified in Resend (e.g. `My Amazing Realtors <forms@myamazingrealtors.com>`). To test before the domain is verified, use `My Amazing Realtors <onboarding@resend.dev>`; Resend then delivers only to the email address the Resend account was created with.
+- `NOTIFY_TO` (optional): who receives the alerts, comma-separated. Defaults to PK's site email.
+
+Without the first two, submissions are still saved and the function log shows "Email alert skipped".
+
+## Opening animation
+
+`src/components/layout/intro.tsx` shows a black screen where the logo's hands form the roof, the windows light up and a loading bar fills, then it fades into the site (about 3 seconds). It plays once per browser session, never on `/admin`, and not for visitors who ask their device for reduced motion. Add `?intro` to any URL to replay it. The timing is in the "Intro" block at the end of `src/app/globals.css`.
+
 ## Admin: adding listings
 
 Go to `/admin` and sign in with `ADMIN_PASSWORD` (PK only; no accounts are stored). Type an MLS® number and the site pulls the price, details and photos from PropTx (`src/lib/listings/proptx.ts`) and publishes it at `/listings/<address-slug>` and on `/our-listings`.

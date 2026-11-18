@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { MobileActionBar } from "@/components/layout/mobile-action-bar";
 import { JsonLd, realEstateAgentSchema } from "@/components/seo/json-ld";
+import { Intro } from "@/components/layout/intro";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -46,8 +47,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-CA" className={`${cormorant.variable} ${manrope.variable} antialiased`}>
+    // suppressHydrationWarning: the intro script briefly locks page scroll on <html> before React loads.
+    <html lang="en-CA" className={`${cormorant.variable} ${manrope.variable} antialiased`} suppressHydrationWarning>
       <body className="flex min-h-dvh flex-col pb-24 md:pb-0">
+        <Intro />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-navy-900 focus:px-4 focus:py-3 focus:text-on-dark"
