@@ -86,6 +86,18 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
     setEager(true);
   };
 
+  /*
+   * HD on large screens. The player always opens with the light version (the same file as the preview,
+   * already downloaded, so it starts at once). On iPads and computers the 1080p version then loads in a
+   * second, hidden player, only while the reel is open, so it never competes with the previews for
+   * bandwidth. Once it can play from the current moment it takes over seamlessly.
+   */
+  const hdRef = useRef<HTMLVideoElement>(null);
+  const [hdReady, setHdReady] = useState<string | null>(null);
+  const upgrading = useRef<string | null>(null);
+  /** Whichever player is showing. */
+  const showing = () => (hdReady !== null && hdRef.current ? hdRef.current : playerRef.current);
+
   /** Opens the full-screen player, continuing from where the silent preview had reached. */
   const openPlayer = (i: number) => {
     startAt.current = videoRefs.current[i]?.currentTime ?? 0;
@@ -93,12 +105,15 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
   };
   /** Closes it; the preview then carries on from where the viewer stopped. */
   const closePlayer = () => {
-    const player = playerRef.current;
+    const player = showing();
     const preview = open === null ? null : videoRefs.current[open];
     if (player && preview && open === active && player.currentTime < (player.duration || Infinity) - 0.3) {
       preview.currentTime = player.currentTime;
     }
-    player?.pause();
+    playerRef.current?.pause();
+    hdRef.current?.pause();
+    upgrading.current = null;
+    setHdReady(null);
     setOpen(null);
   };
   /** Next or previous reel inside the player starts from the beginning. */
@@ -106,6 +121,9 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
     if (open === null) return;
     const i = (open + delta + reels.length) % reels.length;
     startAt.current = 0;
+    hdRef.current?.pause();
+    upgrading.current = null;
+    setHdReady(null);
     setOpen(i);
   };
 
@@ -214,9 +232,12 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
       { rootMargin: "100% 0px 100% 0px" },
     );
     early.observe(track);
+    // Also start a few seconds after the page loads, so a jump straight to Videos finds the first reel ready.
+    const timer = window.setTimeout(() => setNear(true), 3000);
     return () => {
       observer.disconnect();
       early.disconnect();
+      window.clearTimeout(timer);
     };
   }, []);
 
@@ -265,7 +286,8 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
   const playerIndex = open ?? (hovered && hovered.whileActive === active ? hovered.index : active);
   const current = reels[playerIndex];
   const largeScreen = useLargeScreen();
-  const playerSrc = current && largeScreen && current.videoHd ? current.videoHd : current?.video;
+  const hdSrc = open !== null && current && largeScreen ? current.videoHd : null;
+  const hdShowing = hdSrc !== null && hdReady === current?.id;
 
   return (
     <div {...pauseHandlers}>
@@ -429,14 +451,51 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
                 v.currentTime = t > 0 && t < v.duration - 0.3 ? t : 0;
                 v.play().catch(() => {});
               }}
-              src={playerSrc}
+              src={current.video}
               poster={current.poster ?? undefined}
               // "auto" buffers the whole reel; until the visitor shows interest, only its size and first frame.
               preload={eager ? "auto" : "metadata"}
-              controls
+              controls={!hdShowing}
               playsInline
               className="aspect-[9/16] w-full bg-black"
             />
+            {hdSrc && (
+              <video
+                key={current.id}
+                ref={hdRef}
+                src={hdSrc}
+                preload="auto"
+                muted
+                playsInline
+                controls={hdShowing}
+                aria-hidden={!hdShowing}
+                tabIndex={hdShowing ? 0 : -1}
+                onCanPlay={(e) => {
+                  // First time the HD copy can play: line it up with the light one.
+                  const light = playerRef.current;
+                  if (!light || upgrading.current === current.id || hdReady === current.id) return;
+                  upgrading.current = current.id;
+                  e.currentTarget.currentTime = light.currentTime;
+                }}
+                onSeeked={(e) => {
+                  // Lined up: hand over to HD at the same moment, with the same sound settings.
+                  const light = playerRef.current;
+                  if (!light || upgrading.current !== current.id || hdReady === current.id) return;
+                  const hd = e.currentTarget;
+                  hd.currentTime = light.currentTime;
+                  hd.muted = light.muted;
+                  hd.volume = light.volume;
+                  if (!light.paused) hd.play().catch(() => {});
+                  light.pause();
+                  setHdReady(current.id);
+                }}
+                onWaiting={() => hdShowing && setPlayerBuffering(true)}
+                onPlaying={() => setPlayerBuffering(false)}
+                className={`absolute inset-x-0 top-0 aspect-[9/16] w-full bg-black transition-opacity duration-300 ${
+                  hdShowing ? "opacity-100" : "pointer-events-none opacity-0"
+                }`}
+              />
+            )}
             {/* Covers only the picture, not the title underneath. */}
             <span className="pointer-events-none absolute inset-x-0 top-0 aspect-[9/16]">
               <BufferingOverlay show={open !== null && playerBuffering} />

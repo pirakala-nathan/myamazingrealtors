@@ -127,18 +127,22 @@ const bathLabel = (b: number) => `${b} bathroom${b === 1 ? "" : "s"}`;
 async function carouselListings(): Promise<{ items: CarouselListing[]; forSale: number; sold: number }> {
   const all = await getListings();
   const items: CarouselListing[] = all
-    .filter((l) => l.photos.length > 0)
+    // Off-market homes aren't shown publicly (same as the listings page).
+    .filter((l) => l.photos.length > 0 && l.status !== "off-market")
     .sort((a, b) => b.addedAt.localeCompare(a.addedAt))
     .map((l) => {
       const over = isOverAsking(l);
-      const facts = [
+      type Fact = { label: string; value: string };
+      const stats = [
         l.bedrooms && { label: "Bedrooms", value: l.bedrooms },
         l.bathrooms != null && { label: "Bathrooms", value: String(l.bathrooms) },
+        l.sizeRange && { label: "Sq ft", value: l.sizeRange },
+      ].filter((f): f is Fact => Boolean(f));
+      const facts = [
         l.propertyType && { label: "Property type", value: l.propertyType },
-        l.sizeRange && { label: "Size (sq ft)", value: l.sizeRange },
         { label: "City", value: l.city },
         { label: "MLS®", value: l.mlsNumber },
-      ].filter((f): f is { label: string; value: string } => Boolean(f));
+      ].filter((f): f is Fact => Boolean(f));
       return {
         key: l.mlsNumber,
         href: `/listings/${l.slug}`,
@@ -154,6 +158,7 @@ async function carouselListings(): Promise<{ items: CarouselListing[]; forSale: 
           l.propertyType,
           l.sizeRange && `${l.sizeRange} sq ft`,
         ].filter((p): p is string => Boolean(p)),
+        stats,
         facts,
         description: l.description,
       };
@@ -171,6 +176,7 @@ async function carouselListings(): Promise<{ items: CarouselListing[]; forSale: 
       over: true,
       price: null,
       points: [status, place],
+      stats: [],
       facts: [],
       description: null,
     };
