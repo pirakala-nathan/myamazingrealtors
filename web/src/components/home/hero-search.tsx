@@ -78,12 +78,10 @@ export function HeroSearch({
   listings,
   cities,
   firstName,
-  counts,
 }: {
   listings: SearchableListing[];
   cities: readonly string[];
   firstName: string;
-  counts: { forSale: number; sold: number };
 }) {
   const router = useRouter();
   const id = useId();
@@ -111,7 +109,7 @@ export function HeroSearch({
   const searchAll = () => router.push(q ? `/our-listings?q=${encodeURIComponent(q)}` : "/our-listings");
 
   return (
-    <div ref={rootRef} className="relative flex max-w-[560px] flex-col gap-4">
+    <div ref={rootRef} className="relative">
       <form
         role="search"
         action="/our-listings"
@@ -121,7 +119,7 @@ export function HeroSearch({
           if (open && highlight >= 0 && results[highlight]) router.push(results[highlight].href);
           else searchAll();
         }}
-        className="hero-rise group relative flex bg-white shadow-[0_18px_44px_-22px_rgba(10,29,40,0.5)] transition-shadow focus-within:shadow-[0_22px_50px_-20px_rgba(0,178,219,0.55)]"
+        className="hero-rise group relative flex bg-white transition-shadow focus-within:shadow-[0_0_0_3px_rgba(0,178,219,0.45)]"
         style={{ animationDelay: "var(--hero-delay, 0ms)" }}
       >
         {/* Cyan line that sweeps across the top as the bar arrives, and glows while it's in use. */}
@@ -176,11 +174,11 @@ export function HeroSearch({
             aria-controls={`${id}-results`}
             aria-autocomplete="list"
             aria-activedescendant={open && highlight >= 0 ? `${id}-r${highlight}` : undefined}
-            className="min-h-16 w-full min-w-0 rounded-none bg-transparent pl-12 pr-3 text-base text-ink placeholder:text-muted focus:outline-none sm:text-lg [&::-webkit-search-cancel-button]:hidden"
+            className="min-h-14 w-full min-w-0 rounded-none bg-transparent pl-12 pr-3 text-base text-ink placeholder:text-muted focus:outline-none [&::-webkit-search-cancel-button]:hidden"
           />
           {/* The typing hint, drawn over the empty box. */}
           {!focused && query === "" && (
-            <span aria-hidden="true" className="pointer-events-none absolute left-12 right-3 truncate text-base text-muted sm:text-lg">
+            <span aria-hidden="true" className="pointer-events-none absolute left-12 right-3 truncate text-base text-muted">
               Search {hint}
               <span className="hero-caret ml-px inline-block h-[1.1em] w-[2px] translate-y-[3px] bg-aqua-500" />
             </span>
@@ -199,7 +197,7 @@ export function HeroSearch({
         id={`${id}-results`}
         role="listbox"
         aria-label="Matching listings"
-        className={`absolute inset-x-0 top-[calc(4rem+0.5rem)] z-30 origin-top bg-white shadow-[0_28px_60px_-24px_rgba(10,29,40,0.55)] transition-[opacity,transform] duration-300 ease-out ${
+        className={`absolute left-0 top-full z-30 mt-2 w-[min(calc(100vw-2rem),540px)] min-w-full origin-top bg-white shadow-[0_28px_60px_-24px_rgba(10,29,40,0.55)] transition-[opacity,transform] duration-300 ease-out ${
           open ? "translate-y-0 scale-y-100 opacity-100" : "pointer-events-none -translate-y-2 scale-y-95 opacity-0"
         }`}
       >
@@ -257,34 +255,6 @@ export function HeroSearch({
           </>
         )}
       </div>
-
-      <div className="flex flex-wrap items-center gap-2" aria-label="Browse by city">
-        {cities.map((city, i) => (
-          <Link
-            key={city}
-            href={`/our-listings?q=${encodeURIComponent(city)}`}
-            className="hero-rise border border-cloud-400 bg-white/70 px-3 py-1.5 text-sm font-semibold text-body transition-[transform,border-color,color] hover:-translate-y-0.5 hover:border-navy-900 hover:text-ink"
-            style={{ animationDelay: `calc(var(--hero-delay, 0ms) + ${450 + i * 70}ms)` }}
-          >
-            {city}
-          </Link>
-        ))}
-      </div>
-
-      <p
-        className="hero-rise flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-body"
-        style={{ animationDelay: `calc(var(--hero-delay, 0ms) + ${450 + cities.length * 70}ms)` }}
-      >
-        {counts.forSale + counts.sold > 0 && (
-          <span>
-            <strong className="text-ink">{counts.forSale}</strong> for sale · <strong className="text-ink">{counts.sold}</strong>{" "}
-            recently sold
-          </span>
-        )}
-        <Link href="/our-listings" className="font-extrabold text-aqua-700 hover:text-navy-900">
-          Explore all listings →
-        </Link>
-      </p>
     </div>
   );
 }

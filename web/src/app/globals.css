@@ -301,6 +301,26 @@
   }
 }
 
+/* Expanded listing (src/components/home/listings-carousel.tsx): backdrop fades, panel rises and settles. */
+.listing-dialog {
+  animation: listing-dialog-in 0.3s ease-out both;
+}
+.listing-dialog-panel {
+  animation: listing-panel-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes listing-dialog-in {
+  from { opacity: 0; }
+}
+@keyframes listing-panel-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .listing-dialog,
+  .listing-dialog-panel {
+    animation: none;
+  }
+}
+
 /* Homepage search photos (src/components/home/photo-rotator.tsx): cross-fade in, then a slow zoom. */
 .photo-fade-in {
   animation: photo-fade-in 1.2s ease-out both;
@@ -388,14 +408,6 @@
   to { transform: scaleX(1); }
 }
 
-/* Listing spotlight caption (src/components/home/listing-spotlight.tsx): slides up with each new listing. */
-.spotlight-caption {
-  animation: spotlight-caption 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-@keyframes spotlight-caption {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: none; }
-}
 /* Sections that rise into view the first time they scroll on screen (src/components/home/reveal.tsx). */
 .reveal > * {
   opacity: 0;
