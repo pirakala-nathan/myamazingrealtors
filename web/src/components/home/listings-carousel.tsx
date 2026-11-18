@@ -349,7 +349,9 @@ export function ListingsCarousel({ listings }: { listings: CarouselListing[] }) 
             }`}
             style={{ transitionDelay: entered ? "0ms" : `${Math.min(i, 4) * 110}ms` }}
           >
-            <article className="group relative flex h-full flex-col bg-white shadow-[0_18px_40px_-28px_rgba(10,29,40,0.45)] transition-shadow duration-500 hover:shadow-[0_26px_54px_-24px_rgba(0,178,219,0.5)]">
+            <article
+              data-front={i === active}
+              className="group relative flex h-full flex-col bg-white shadow-[0_18px_40px_-28px_rgba(10,29,40,0.45)] transition-shadow duration-500 hover:shadow-[0_26px_54px_-24px_rgba(0,178,219,0.5)]">
               <button
                 type="button"
                 onClick={() => setOpen(i)}
@@ -370,14 +372,14 @@ export function ListingsCarousel({ listings }: { listings: CarouselListing[] }) 
                   <StatusBadge l={l} />
                 </span>
 
-                {/* Hover panel: key points over a faded house mark. */}
-                <span className="pointer-events-none absolute inset-0 flex flex-col justify-end overflow-hidden bg-gradient-to-t from-navy-950/95 via-navy-950/80 to-navy-950/30 p-5 text-on-dark opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-within:opacity-100">
-                  <HouseMark className="absolute -right-8 top-1/2 w-56 -translate-y-1/2 scale-90 text-aqua-400 opacity-0 transition-[opacity,transform] duration-700 group-hover:scale-100 group-hover:opacity-[0.14]" />
+                {/* Key points over a faded house mark: on hover with a mouse; on phones and iPads (touch), on the home at the front of the row. */}
+                <span className="pointer-events-none absolute inset-0 flex flex-col justify-end overflow-hidden bg-gradient-to-t from-navy-950/95 via-navy-950/80 to-navy-950/30 p-5 text-on-dark opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:group-data-[front=true]:opacity-100">
+                  <HouseMark className="absolute -right-8 top-1/2 w-56 -translate-y-1/2 scale-90 text-aqua-400 opacity-0 transition-[opacity,transform] duration-700 group-hover:scale-100 group-hover:opacity-[0.14] pointer-coarse:group-data-[front=true]:scale-100 pointer-coarse:group-data-[front=true]:opacity-[0.14]" />
                   <span className="relative flex flex-col gap-2">
                     {(l.points.length ? l.points : [l.place]).map((p, n) => (
                       <span
                         key={p}
-                        className="flex translate-y-3 items-center gap-2.5 text-[15px] font-semibold opacity-0 transition-[opacity,transform] duration-500 group-hover:translate-y-0 group-hover:opacity-100"
+                        className="flex translate-y-3 items-center gap-2.5 text-[15px] font-semibold opacity-0 transition-[opacity,transform] duration-500 group-hover:translate-y-0 group-hover:opacity-100 pointer-coarse:group-data-[front=true]:translate-y-0 pointer-coarse:group-data-[front=true]:opacity-100"
                         style={{ transitionDelay: `${120 + n * 70}ms` }}
                       >
                         <span className="size-1.5 shrink-0 bg-aqua-400" aria-hidden="true" />
@@ -385,10 +387,11 @@ export function ListingsCarousel({ listings }: { listings: CarouselListing[] }) 
                       </span>
                     ))}
                     <span
-                      className="mt-2 inline-flex translate-y-3 items-center gap-2 self-start border border-aqua-400 px-3 py-1.5 text-xs font-extrabold uppercase tracking-[0.14em] text-aqua-300 opacity-0 transition-[opacity,transform] duration-500 group-hover:translate-y-0 group-hover:opacity-100"
+                      className="mt-2 inline-flex translate-y-3 items-center gap-2 self-start border border-aqua-400 px-3 py-1.5 text-xs font-extrabold uppercase tracking-[0.14em] text-aqua-300 opacity-0 transition-[opacity,transform] duration-500 group-hover:translate-y-0 group-hover:opacity-100 pointer-coarse:group-data-[front=true]:translate-y-0 pointer-coarse:group-data-[front=true]:opacity-100"
                       style={{ transitionDelay: `${120 + Math.max(1, l.points.length) * 70}ms` }}
                     >
-                      Expand
+                      <span className="pointer-coarse:hidden">Expand</span>
+                      <span className="hidden pointer-coarse:inline">Tap for details</span>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
                         <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
                       </svg>

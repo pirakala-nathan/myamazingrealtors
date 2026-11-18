@@ -89,6 +89,8 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
   const [previewing, setPreviewing] = useState<number | null>(null);
   const [warmed, setWarmed] = useState<number[]>([]);
   const previewTimer = useRef(0);
+  // How the last tap or click was made ("mouse", "touch" or "pen"), to tell a phone tap from a mouse click.
+  const lastPointer = useRef("mouse");
   useEffect(() => () => window.clearTimeout(previewTimer.current), []);
   const startPreview = (i: number) => {
     setWarmed((w) => (w.includes(i) ? w : [...w, i]));
@@ -188,6 +190,8 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
     let frame = 0;
     const update = () => {
       if (autoScrolling.current) return;
+      // A swipe ends a tap-to-preview: the reel at the front plays again.
+      if (lastPointer.current !== "mouse") setPreviewing(null);
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         const start = track.scrollLeft + (parseFloat(getComputedStyle(track).paddingLeft) || 0);
@@ -473,14 +477,28 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
             >
               <button
                 type="button"
-                onClick={() => (isActive ? openPlayer(i) : goTo(i))}
+                onClick={() => {
+                  if (isActive) return openPlayer(i);
+                  // Touch (phones, iPads): the first tap plays this reel's preview where it is, like hovering
+                  // with a mouse; tapping it again opens it full screen. Mouse and keyboard bring it to the front.
+                  if (lastPointer.current === "touch" || lastPointer.current === "pen") {
+                    window.clearTimeout(previewTimer.current);
+                    setWarmed((w) => (w.includes(i) ? w : [...w, i]));
+                    setPreviewing(i);
+                  } else goTo(i);
+                }}
                 // Mouse: play this reel's preview while pointed at, and start loading the full-screen version.
                 onPointerEnter={(e) => {
                   warmUp(i);
                   if (e.pointerType === "mouse") startPreview(i);
                 }}
                 onPointerLeave={(e) => e.pointerType === "mouse" && stopPreview()}
-                onPointerDown={() => warmUp(i)}
+                onPointerDown={(e) => {
+                  lastPointer.current = e.pointerType;
+                  warmUp(i);
+                  // Start loading as soon as a finger lands, so the preview is ready by the time it lifts.
+                  if (e.pointerType !== "mouse") setWarmed((w) => (w.includes(i) ? w : [...w, i]));
+                }}
                 onFocus={() => warmUp(i)}
                 aria-label={
                   isActive
@@ -494,6 +512,13 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
                 <video
                   ref={(el) => {
                     videoRefs.current[i] = el;
+                    // iPhones and iPads only autoplay videos that are muted in the page itself (React's
+                    // `muted` prop doesn't always reach the HTML), so set it directly too.
+                    if (el && !el.hasAttribute("muted")) {
+                      el.defaultMuted = true;
+                      el.muted = true;
+                      el.setAttribute("muted", "");
+                    }
                   }}
                   // Without a preview image, load the first frame so the card isn't blank.
                   src={reel.poster ? reel.video : `${reel.video}#t=0.5`}
