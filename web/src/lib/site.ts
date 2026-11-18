@@ -34,8 +34,8 @@ export const site = {
     region: "ON",
     postalCode: "M2J 1P8",
     country: "CA",
-    phone: "905-239-9222",
-    phoneHref: "tel:+19052399222",
+    phone: "416-287-2222",
+    phoneHref: "tel:+14162872222",
   },
 
   social: {
