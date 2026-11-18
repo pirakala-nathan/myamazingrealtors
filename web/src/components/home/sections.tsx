@@ -76,12 +76,6 @@ export function Services() {
 
 export async function WatchSection() {
   const reels = await getReels();
-  const handle = site.social.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "");
-  const follow = (
-    <ButtonLink href={site.social.instagram} variant="accent" className="self-start">
-      Follow {handle} on Instagram
-    </ButtonLink>
-  );
   const intro = (
     <>
       <p className="eyebrow text-aqua-400">Watch {site.agent.firstName}</p>
@@ -99,14 +93,10 @@ export async function WatchSection() {
     return (
       <section className="overflow-hidden bg-navy-900 text-on-dark">
         <div className="container-site flex flex-col gap-8 py-20 md:py-24">
-          <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-            <div className="flex max-w-2xl flex-col gap-4.5">{intro}</div>
-            {follow}
-          </div>
+          <div className="flex max-w-2xl flex-col gap-4.5">{intro}</div>
         </div>
         <div className="-mt-12 pb-20 md:-mt-14 md:pb-24">
           <ReelCarousel
-            igProfile={site.social.instagram}
             reels={reels.map((r) => ({ id: r.id, video: r.video!, poster: r.poster, title: r.title, instagramUrl: r.instagramUrl }))}
           />
         </div>
@@ -117,10 +107,7 @@ export async function WatchSection() {
   return (
     <section className="bg-navy-900 text-on-dark">
       <div className="container-site flex flex-col gap-12 py-20 md:py-24 lg:flex-row lg:items-center">
-        <div className="flex flex-col gap-4.5 lg:flex-[1_1_360px]">
-          {intro}
-          {follow}
-        </div>
+        <div className="flex flex-col gap-4.5 lg:flex-[1_1_360px]">{intro}</div>
         {/* Placeholder poster until a real video is supplied. */}
         <div className="relative aspect-video lg:flex-[1.4_1_520px]">
           <Image

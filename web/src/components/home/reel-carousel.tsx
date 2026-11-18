@@ -18,7 +18,7 @@ const FALLBACK_ADVANCE_MS = 15_000; // if a video can't play, move on anyway
  * Clicking the middle reel opens a full-screen player with sound.
  * Pauses on hover, focus or touch and when the tab is hidden; no auto-play for reduced motion.
  */
-export function ReelCarousel({ reels, igProfile }: { reels: ReelSlide[]; igProfile: string }) {
+export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
   const trackRef = useRef<HTMLUListElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const [active, setActive] = useState(0);
@@ -241,17 +241,7 @@ export function ReelCarousel({ reels, igProfile }: { reels: ReelSlide[]; igProfi
               playsInline
               className="aspect-[9/16] w-full bg-black"
             />
-            <div className="flex items-center justify-between gap-3 text-on-dark">
-              <span className="line-clamp-1 text-sm font-bold">{current.title}</span>
-              <a
-                href={current.instagramUrl ?? igProfile}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 text-sm font-bold text-aqua-300 underline"
-              >
-                View on Instagram
-              </a>
-            </div>
+            {current.title && <p className="line-clamp-2 text-sm font-bold text-on-dark">{current.title}</p>}
           </div>
           <button
             type="button"
