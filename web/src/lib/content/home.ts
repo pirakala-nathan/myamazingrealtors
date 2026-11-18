@@ -48,11 +48,32 @@ export const recentSales: RecentSale[] = [
   },
 ];
 
+/** Results band. `more` is the extra line revealed on hover (always shown on touch screens). */
 export const stats = [
-  { value: "$75M+", label: "In career sales", detail: "Across Durham & the East GTA" },
-  { value: "150+", label: "Homes sold", detail: "For buyers and sellers" },
-  { value: "12+", label: "Years in real estate", detail: "Including development and new builds" },
-  { value: "[#.#]★", label: "Google rating", detail: "From [##] client reviews" },
+  {
+    value: "$75M+",
+    label: "In career sales",
+    detail: "Across Durham & the East GTA",
+    more: "The combined value of the homes PK has helped clients buy and sell.",
+  },
+  {
+    value: "150+",
+    label: "Homes sold",
+    detail: "For buyers and sellers",
+    more: "First homes, move-up homes, downsizing and investment properties.",
+  },
+  {
+    value: "12+",
+    label: "Years in real estate",
+    detail: "Including development and new builds",
+    more: "Hands-on building and development experience, so PK knows what a home is really worth.",
+  },
+  {
+    value: "[#.#]★",
+    label: "Google rating",
+    detail: "From [##] client reviews",
+    more: "Real reviews from PK’s clients on Google Maps. Read them further down this page.",
+  },
 ];
 
 /** Short stats beside PK's portrait in the hero. */

@@ -8,7 +8,7 @@ const RATIO = 315.5 / 50.4;
 
 export function Logo({ reverse = false, showBrokerage = true }: { reverse?: boolean; showBrokerage?: boolean }) {
   return (
-    <Link href="/" className="flex min-w-0 flex-col gap-1" aria-label={`${site.name} home`}>
+    <Link href="/" className="flex min-w-0 flex-col items-start gap-1" aria-label={`${site.name} home`}>
       <Image
         src={reverse ? "/brand/logo-horizontal-reverse.svg" : "/brand/logo-horizontal.svg"}
         alt={site.name}

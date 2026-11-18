@@ -33,6 +33,36 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
   const [open, setOpen] = useState<number | null>(null);
+  // Where the full-screen player should start (the preview's position), and the player itself.
+  const startAt = useRef(0);
+  const playerRef = useRef<HTMLVideoElement>(null);
+
+  /** Opens the full-screen player, continuing from where the silent preview had reached. */
+  const openPlayer = (i: number) => {
+    startAt.current = videoRefs.current[i]?.currentTime ?? 0;
+    setOpen(i);
+  };
+  /** Closes it; the preview then carries on from where the viewer stopped. */
+  const closePlayer = () => {
+    const player = playerRef.current;
+    const preview = open === null ? null : videoRefs.current[open];
+    if (player && preview && open === active && player.currentTime < (player.duration || Infinity) - 0.3) {
+      preview.currentTime = player.currentTime;
+    }
+    setOpen(null);
+  };
+  /** Next or previous reel inside the player starts from the beginning. */
+  const switchPlayer = (delta: number) => {
+    startAt.current = 0;
+    setOpen((o) => (o === null ? o : (o + delta + reels.length) % reels.length));
+  };
+  // Latest versions for the keyboard listener below.
+  const closePlayerRef = useRef(closePlayer);
+  const switchPlayerRef = useRef(switchPlayer);
+  useEffect(() => {
+    closePlayerRef.current = closePlayer;
+    switchPlayerRef.current = switchPlayer;
+  });
 
   // True while the carousel is scrolling itself, so the scroll listener doesn't fight it.
   const autoScrolling = useRef(false);
@@ -137,9 +167,9 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
   useEffect(() => {
     if (open === null) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(null);
-      if (e.key === "ArrowRight") setOpen((o) => (o === null ? o : (o + 1) % reels.length));
-      if (e.key === "ArrowLeft") setOpen((o) => (o === null ? o : (o - 1 + reels.length) % reels.length));
+      if (e.key === "Escape") closePlayerRef.current();
+      if (e.key === "ArrowRight") switchPlayerRef.current(1);
+      if (e.key === "ArrowLeft") switchPlayerRef.current(-1);
     };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -175,7 +205,7 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
             >
               <button
                 type="button"
-                onClick={() => (isActive ? setOpen(i) : goTo(i))}
+                onClick={() => (isActive ? openPlayer(i) : goTo(i))}
                 aria-label={isActive ? `Play ${reel.title ?? `reel ${i + 1}`} with sound` : `Show ${reel.title ?? `reel ${i + 1}`}`}
                 className={`group relative block aspect-[9/16] w-full overflow-hidden bg-navy-950 text-left ${
                   isActive ? "shadow-[0_24px_60px_-20px_rgba(0,178,219,0.55)] outline outline-2 outline-aqua-400" : ""
@@ -252,12 +282,17 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
           aria-label={current.title ?? "Reel"}
           className="fixed inset-0 z-[90] flex items-center justify-center bg-black/90 p-4"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setOpen(null);
+            if (e.target === e.currentTarget) closePlayer();
           }}
         >
           <div className="flex max-h-full w-full max-w-[min(92vw,calc((100dvh-140px)*9/16))] flex-col gap-3">
             <video
               key={current.id}
+              ref={playerRef}
+              onLoadedMetadata={(e) => {
+                const v = e.currentTarget;
+                if (startAt.current > 0 && startAt.current < v.duration - 0.3) v.currentTime = startAt.current;
+              }}
               src={current.video}
               poster={current.poster ?? undefined}
               controls
@@ -270,7 +305,7 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
           <button
             type="button"
             autoFocus
-            onClick={() => setOpen(null)}
+            onClick={closePlayer}
             aria-label="Close"
             className="absolute right-4 top-4 flex size-12 items-center justify-center border-[1.5px] border-on-dark text-on-dark hover:bg-on-dark hover:text-navy-900"
           >
@@ -282,7 +317,7 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
             <>
               <button
                 type="button"
-                onClick={() => setOpen((o) => (o === null ? o : (o - 1 + reels.length) % reels.length))}
+                onClick={() => switchPlayer(-1)}
                 aria-label="Previous reel"
                 className="absolute left-4 top-1/2 hidden size-12 -translate-y-1/2 items-center justify-center border-[1.5px] border-on-dark text-on-dark hover:bg-on-dark hover:text-navy-900 sm:flex"
               >
@@ -290,7 +325,7 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
               </button>
               <button
                 type="button"
-                onClick={() => setOpen((o) => (o === null ? o : (o + 1) % reels.length))}
+                onClick={() => switchPlayer(1)}
                 aria-label="Next reel"
                 className="absolute right-4 top-1/2 hidden size-12 -translate-y-1/2 items-center justify-center border-[1.5px] border-on-dark text-on-dark hover:bg-on-dark hover:text-navy-900 sm:flex"
               >

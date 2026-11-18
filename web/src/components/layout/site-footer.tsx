@@ -7,8 +7,9 @@ export function SiteFooter() {
   return (
     <footer className="bg-navy-950 text-on-dark-muted">
       <div className="container-site flex flex-col gap-9 pb-7 pt-14">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="flex flex-col gap-2 lg:col-span-2">
+        {/* Brand and address | Explore (two short columns) | Follow, all top-aligned on one line. */}
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_minmax(0,0.5fr)] lg:gap-14">
+          <div className="flex flex-col gap-4 sm:col-span-2 lg:col-span-1">
             <Logo reverse showBrokerage={false} />
             <address className="text-sm not-italic leading-7">
               {site.agent.name}, {site.agent.title}
@@ -20,8 +21,9 @@ export function SiteFooter() {
               Office <a href={site.office.phoneHref} className="hover:text-aqua-300">{site.office.phone}</a>
             </address>
           </div>
-          <div className="flex flex-col gap-2 text-[15px]">
+          <div className="flex flex-col gap-3 text-[15px]">
             <span className="eyebrow text-xs text-aqua-400">Explore</span>
+            <div className="grid grid-cols-2 gap-x-8 gap-y-2">
             <Link href="/about" className="hover:text-aqua-300">About PK</Link>
             <Link href="/buy" className="hover:text-aqua-300">Buying</Link>
             <Link href="/sell" className="hover:text-aqua-300">Selling</Link>
@@ -30,8 +32,9 @@ export function SiteFooter() {
             <Link href="/#reviews" className="hover:text-aqua-300">Reviews</Link>
             <Link href="/home-evaluation" className="hover:text-aqua-300">Home valuation</Link>
             <Link href="/contact" className="hover:text-aqua-300">Contact</Link>
+            </div>
           </div>
-          <div className="flex flex-col gap-2 text-[15px]">
+          <div className="flex flex-col gap-3 text-[15px]">
             <span className="eyebrow text-xs text-aqua-400">Follow</span>
             <a href={site.social.instagram} className="hover:text-aqua-300">Instagram</a>
             <a href={site.social.facebook} className="hover:text-aqua-300">Facebook</a>
