@@ -3,6 +3,9 @@ import Link from "next/link";
 import { site } from "@/lib/site";
 import { heroStats, recentSales } from "@/lib/content/home";
 import { formatRating, getGoogleReviews } from "@/lib/google-reviews";
+import { getListings } from "@/lib/listings/store";
+import { listingTitle, statusLabel } from "@/lib/listings/types";
+import { PhotoRotator, type RotatorPhoto } from "@/components/home/photo-rotator";
 
 /** Direction C, "Light & Airy": serif headline, circular portrait and a stats column. */
 export async function Hero() {
@@ -102,8 +105,22 @@ export function ContactStrip() {
 }
 
 /** MLS® search beside a small grid of recent listing photos. */
-export function SearchSection() {
-  const [tall, ...small] = recentSales;
+/**
+ * Cover photos for the search section: newest listings PK has added first (any status),
+ * topped up with the sample sale photos until there are at least three.
+ */
+async function searchPhotos(): Promise<RotatorPhoto[]> {
+  const listings = (await getListings())
+    .filter((l) => l.photos.length > 0)
+    .sort((a, b) => b.addedAt.localeCompare(a.addedAt))
+    .slice(0, 12)
+    .map((l) => ({ src: l.photos[0], alt: `${listingTitle(l)}, ${statusLabel[l.status].toLowerCase()}`, href: `/listings/${l.slug}` }));
+  const samples = recentSales.map((s) => ({ src: s.image, alt: s.imageAlt, href: null }));
+  return listings.length >= 3 ? listings : [...listings, ...samples].slice(0, Math.max(3, listings.length));
+}
+
+export async function SearchSection() {
+  const photos = await searchPhotos();
   return (
     <section className="container-site grid items-center gap-12 pb-20 pt-6 md:pb-26 lg:grid-cols-2 lg:gap-14">
       <div className="flex flex-col">
@@ -134,16 +151,7 @@ export function SearchSection() {
           </button>
         </form>
       </div>
-      <div className="grid grid-cols-2 grid-rows-2 gap-4">
-        <div className="relative row-span-2 min-h-[300px]">
-          <Image src={tall.image} alt={tall.imageAlt} fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover" />
-        </div>
-        {small.slice(0, 2).map((s) => (
-          <div key={s.address} className="relative min-h-[142px]">
-            <Image src={s.image} alt={s.imageAlt} fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover" />
-          </div>
-        ))}
-      </div>
+      <PhotoRotator photos={photos} />
     </section>
   );
 }
