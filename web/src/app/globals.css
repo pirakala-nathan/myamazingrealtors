@@ -257,6 +257,50 @@
   }
 }
 
+/*
+ * Hero search (src/components/home/hero-search.tsx). The bar rises in and a cyan line sweeps across it,
+ * then the city shortcuts follow one by one. While the opening intro plays, its script sets --hero-delay
+ * on <html> so this starts as the intro fades out instead of hidden behind it.
+ */
+.hero-rise {
+  animation: hero-rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.hero-sweep {
+  transform-origin: left;
+  animation: hero-sweep 0.9s cubic-bezier(0.6, 0, 0.2, 1) both;
+}
+.hero-caret {
+  animation: hero-caret 1s steps(1) infinite;
+}
+.hero-result {
+  animation: hero-result 0.35s ease-out both;
+}
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes hero-sweep {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes hero-caret {
+  50% { opacity: 0; }
+}
+@keyframes hero-result {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-rise,
+  .hero-sweep,
+  .hero-result {
+    animation: none;
+  }
+  .hero-caret {
+    display: none;
+  }
+}
+
 /* Homepage search photos (src/components/home/photo-rotator.tsx): cross-fade in, then a slow zoom. */
 .photo-fade-in {
   animation: photo-fade-in 1.2s ease-out both;

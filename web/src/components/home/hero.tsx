@@ -5,19 +5,38 @@ import { heroStats, recentSales } from "@/lib/content/home";
 import { formatRating, getGoogleReviews } from "@/lib/google-reviews";
 import { getListings } from "@/lib/listings/store";
 import { listingTitle, statusLabel } from "@/lib/listings/types";
+import { HeroSearch, type SearchableListing } from "@/components/home/hero-search";
 import { ListingSpotlight, type SpotlightListing } from "@/components/home/listing-spotlight";
+import type { Listing } from "@/lib/listings/types";
 import { Reveal } from "@/components/home/reveal";
 import { isOverAsking } from "@/components/listings/status-badge";
 import { priceLine } from "@/components/listings/listing-card";
 
 /** Direction C, "Light & Airy": serif headline, circular portrait and a stats column. */
 export async function Hero() {
-  const google = await getGoogleReviews();
+  const [google, all] = await Promise.all([getGoogleReviews(), getListings()]);
+  const searchable: SearchableListing[] = [...all]
+    .sort((a, b) => b.addedAt.localeCompare(a.addedAt))
+    .map((l) => {
+      const over = isOverAsking(l);
+      return {
+        key: l.mlsNumber,
+        href: `/listings/${l.slug}`,
+        src: l.photos[0] ?? null,
+        title: l.street ?? l.city,
+        place: [l.city, l.propertyType].filter(Boolean).join(" · "),
+        status: over ? "Over asking" : statusLabel[l.status],
+        over,
+        haystack: [l.street, l.city, l.postalCode, l.mlsNumber, l.propertyType].filter(Boolean).join(" ").toLowerCase(),
+      };
+    });
+  const counts = listingCounts(all);
   const stats = heroStats.map((s) =>
     s.label === "Google rating" && google ? { ...s, value: formatRating(google.rating) } : s,
   );
   return (
-    <section className="overflow-hidden bg-mist-100">
+    // Clips sideways only, so the search results can drop down over the section below.
+    <section className="relative z-20 overflow-x-clip bg-mist-100">
       <div className="container-site grid items-center gap-10 pb-4 pt-10 md:pt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)_180px] lg:gap-12">
         <div className="flex flex-col gap-6">
           <p className="eyebrow text-aqua-700">
@@ -27,24 +46,7 @@ export async function Hero() {
             Your next move, made simple<span className="text-aqua-400">.</span>
           </h1>
           <p className="max-w-[460px] text-lg leading-relaxed text-body">{site.agent.intro}</p>
-          <Link
-            href="/our-listings"
-            className="group inline-flex min-h-12 items-center gap-4 self-start font-extrabold text-aqua-700 hover:text-navy-900"
-          >
-            Explore listings
-            <svg
-              width="64"
-              height="20"
-              viewBox="0 0 64 20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              aria-hidden="true"
-              className="transition-transform group-hover:translate-x-1"
-            >
-              <path d="M0 10h60M54 4l6 6-6 6" />
-            </svg>
-          </Link>
+          <HeroSearch listings={searchable} cities={site.serviceAreas} firstName={site.agent.firstName} counts={counts} />
         </div>
 
         <div className="relative mx-auto w-full max-w-[420px] p-4 sm:p-5">
@@ -142,15 +144,18 @@ async function spotlightListings(): Promise<{ items: SpotlightListing[]; forSale
     over: true,
     price: null,
   }));
+  return { items: items.length >= 3 ? items : [...items, ...samples].slice(0, Math.max(3, items.length)), ...listingCounts(all) };
+}
+
+function listingCounts(all: Listing[]) {
   return {
-    items: items.length >= 3 ? items : [...items, ...samples].slice(0, Math.max(3, items.length)),
     forSale: all.filter((l) => l.status === "active" || l.status === "pending").length,
     sold: all.filter((l) => l.status === "sold" || l.status === "leased").length,
   };
 }
 
-/** "Search PK's listings": search box, city shortcuts and the animated listing spotlight. */
-export async function SearchSection() {
+/** "Latest listings": PK's newest listings and sales, rotating in the animated spotlight. Search lives in the hero. */
+export async function LatestListings() {
   const { items, forSale, sold } = await spotlightListings();
   return (
     <section className="relative overflow-hidden bg-mist-100 py-20 md:py-26">
@@ -160,58 +165,12 @@ export async function SearchSection() {
         <div className="flex flex-col">
           <p className="eyebrow text-aqua-700">Listings</p>
           <h2 className="mt-4 font-display text-[clamp(2.5rem,4.6vw,3.75rem)] font-semibold leading-[1.02]">
-            Search {site.agent.firstName}’s listings<span className="text-aqua-400">.</span>
+            {site.agent.firstName}’s latest listings<span className="text-aqua-400">.</span>
           </h2>
           <p className="mt-5 max-w-[460px] text-base leading-relaxed text-body">
             Homes {site.agent.firstName} is selling now and recent sales across Durham and the East GTA. Looking for
             something else? {site.agent.firstName} can send you new listings that match your search.
           </p>
-
-          <form action="/our-listings" method="get" role="search" className="group mt-8 flex max-w-[500px] flex-col gap-3 sm:flex-row sm:gap-0">
-            <label htmlFor="home-search" className="sr-only">
-              Search {site.agent.firstName}’s listings by city, street or MLS® number
-            </label>
-            <span className="relative flex min-w-0 flex-1">
-              <svg
-                aria-hidden="true"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted transition-colors group-focus-within:text-aqua-700"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="M20 20l-4-4" />
-              </svg>
-              <input
-                id="home-search"
-                name="q"
-                type="search"
-                placeholder="City, street or MLS®#"
-                className="min-h-14 w-full min-w-0 rounded-none border border-cloud-400 bg-white pl-12 pr-4 text-base text-ink shadow-[0_10px_30px_-18px_rgba(10,29,40,0.45)] transition-[border-color,box-shadow] placeholder:text-muted focus:border-aqua-500 focus:shadow-[0_14px_36px_-16px_rgba(0,178,219,0.55)] focus:outline-none"
-              />
-            </span>
-            <button
-              type="submit"
-              className="min-h-14 rounded-none bg-navy-900 px-8 font-extrabold text-on-dark transition-colors hover:bg-aqua-400 hover:text-navy-900"
-            >
-              Search
-            </button>
-          </form>
-
-          <div className="mt-5 flex flex-wrap gap-2" aria-label="Browse by city">
-            {site.serviceAreas.map((city) => (
-              <Link
-                key={city}
-                href={`/our-listings?q=${encodeURIComponent(city)}`}
-                className="border border-cloud-400 bg-white px-3.5 py-2 text-sm font-semibold text-body transition-all hover:-translate-y-0.5 hover:border-navy-900 hover:text-ink"
-              >
-                {city}
-              </Link>
-            ))}
-          </div>
 
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-cloud-300 pt-5 text-sm">
             {forSale + sold > 0 && (

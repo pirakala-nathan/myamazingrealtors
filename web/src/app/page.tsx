@@ -1,4 +1,4 @@
-import { ContactStrip, Hero, SearchSection } from "@/components/home/hero";
+import { ContactStrip, Hero, LatestListings } from "@/components/home/hero";
 import { ResultsBand } from "@/components/home/results";
 import { ContactCta, Services, Testimonials, WatchSection } from "@/components/home/sections";
 
@@ -12,7 +12,7 @@ export default function HomePage() {
       <Testimonials />
       <Services />
       <WatchSection />
-      <SearchSection />
+      <LatestListings />
       {/* <Insights /> returns once PK publishes articles or market reports (lib/content/home.ts). */}
       <ContactCta />
     </>

@@ -7,7 +7,8 @@ import { InlineScript } from "@/components/layout/inline-script";
  *
  * The animation is pure CSS (see "Intro" in globals.css), so it starts before
  * JavaScript loads and always ends with the overlay hidden. The inline script below
- * skips it for repeat views in the same session, admin pages and reduced-motion users.
+ * skips it for repeat views in the same session, admin pages and reduced-motion users. While it plays,
+ * the script sets --hero-delay so the hero search animates in as the black screen fades.
  * Add ?intro to any URL to replay it.
  *
  * Paths come from public/brand/logo-full-reverse.svg (the official logo, white and cyan).
@@ -55,7 +56,7 @@ export function Intro() {
         </div>
       </div>
       <InlineScript
-        html={`(function(){var el=document.getElementById("intro");if(!el)return;var force=location.search.indexOf("intro")!==-1;var skip=false;try{skip=sessionStorage.getItem("mar-intro")==="seen";sessionStorage.setItem("mar-intro","seen");}catch(e){}if(location.pathname.indexOf("/admin")===0)skip=true;if(skip&&!force){el.setAttribute("data-skip","");return;}document.documentElement.style.overflow="hidden";setTimeout(function(){document.documentElement.style.overflow="";},2600);})();`}
+        html={`(function(){var el=document.getElementById("intro");if(!el)return;var force=location.search.indexOf("intro")!==-1;var skip=false;try{skip=sessionStorage.getItem("mar-intro")==="seen";sessionStorage.setItem("mar-intro","seen");}catch(e){}if(location.pathname.indexOf("/admin")===0)skip=true;if(skip&&!force){el.setAttribute("data-skip","");return;}var root=document.documentElement;root.style.overflow="hidden";root.style.setProperty("--hero-delay","2400ms");setTimeout(function(){root.style.overflow="";},2600);setTimeout(function(){root.style.removeProperty("--hero-delay");},5000);})();`}
       />
     </>
   );
