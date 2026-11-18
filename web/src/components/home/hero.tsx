@@ -5,7 +5,9 @@ import { heroStats, recentSales } from "@/lib/content/home";
 import { formatRating, getGoogleReviews } from "@/lib/google-reviews";
 import { getListings } from "@/lib/listings/store";
 import { statusLabel } from "@/lib/listings/types";
-import { HeroSearch, type SearchableListing } from "@/components/home/hero-search";
+import { SearchPanel } from "@/components/listings/search-panel";
+import { searchableListings } from "@/components/listings/searchable";
+import { typeOptions } from "@/lib/listings/filters";
 import { ListingsCarousel, type CarouselListing } from "@/components/home/listings-carousel";
 import { Reveal } from "@/components/home/reveal";
 import { isOverAsking } from "@/components/listings/status-badge";
@@ -77,35 +79,19 @@ export async function Hero() {
 }
 
 /**
- * Navy strip under the hero: listings search, call/text, office and the home evaluation call to action.
- * Desktop: one row with the search widest. iPad: search across the top, the other three below. Phone: stacked.
+ * Under the hero: the listings search panel (tabs on top, then location, type, price, beds and Search),
+ * resting on the navy row with call/text, office and the home evaluation call to action.
+ * Desktop: one row each. iPad: search segments in rows of three. Phone: everything stacked.
  */
 export async function ContactStrip() {
   const { office, agent } = site;
-  const searchable: SearchableListing[] = [...(await getListings())]
-    .sort((a, b) => b.addedAt.localeCompare(a.addedAt))
-    .map((l) => {
-      const over = isOverAsking(l);
-      return {
-        key: l.mlsNumber,
-        href: `/listings/${l.slug}`,
-        src: l.photos[0] ?? null,
-        title: l.street ?? l.city,
-        place: [l.city, l.propertyType].filter(Boolean).join(" · "),
-        status: over ? "Over asking" : statusLabel[l.status],
-        over,
-        haystack: [l.street, l.city, l.postalCode, l.mlsNumber, l.propertyType].filter(Boolean).join(" ").toLowerCase(),
-      };
-    });
+  const all = await getListings();
   return (
-    // Above the next section so the search results can drop down over it.
-    <section className="relative z-20 bg-mist-100 pt-10 md:pt-14">
+    // Above the next section so the search results can drop down over it; space below before Results.
+    <section className="relative z-20 bg-mist-100 pb-16 pt-10 md:pb-24 md:pt-14">
       <div className="container-site">
-        <div className="grid bg-navy-900 text-on-dark md:grid-cols-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
-          <div className="flex flex-col gap-2.5 border-b border-navy-600 px-5 py-5 md:col-span-3 md:px-7 lg:col-span-1 lg:border-b-0 lg:border-r">
-            <span className="eyebrow text-xs text-on-dark-subtle">Search listings</span>
-            <HeroSearch listings={searchable} cities={site.serviceAreas} firstName={agent.firstName} />
-          </div>
+        <SearchPanel listings={searchableListings(all)} types={typeOptions(all)} cities={site.serviceAreas} firstName={agent.firstName} />
+        <div className="grid bg-navy-900 text-on-dark md:grid-cols-3">
           <a href={agent.phoneHref} className="flex flex-col justify-center gap-1.5 border-b border-navy-600 px-7 py-6 hover:bg-navy-800 md:border-b-0 md:border-r">
             <span className="eyebrow text-xs text-on-dark-subtle">Call or text</span>
             <span className="text-xl font-extrabold">{agent.phone}</span>
