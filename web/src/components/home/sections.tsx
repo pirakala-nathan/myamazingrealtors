@@ -134,7 +134,7 @@ export function ContactCta() {
           </ButtonLink>
           <a
             href={site.agent.phoneHref}
-            className="inline-flex min-h-12 items-center justify-center rounded-full border-[1.5px] border-on-dark px-6 font-bold hover:bg-on-dark hover:text-navy-900"
+            className="inline-flex min-h-12 items-center justify-center rounded-none border-[1.5px] border-on-dark px-6 font-bold hover:bg-on-dark hover:text-navy-900"
           >
             Call {site.agent.phone}
           </a>

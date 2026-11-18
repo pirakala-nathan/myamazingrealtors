@@ -161,7 +161,7 @@ export function SubmitButton({ pending, children }: { pending: boolean; children
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex min-h-13 w-full items-center justify-center rounded-full bg-navy-900 px-8 py-4 text-base font-bold text-on-dark transition-colors hover:bg-navy-700 hover:text-aqua-300 disabled:cursor-wait disabled:opacity-70 sm:w-auto"
+      className="inline-flex min-h-13 w-full items-center justify-center rounded-none bg-navy-900 px-8 py-4 text-base font-bold text-on-dark transition-colors hover:bg-navy-700 hover:text-aqua-300 disabled:cursor-wait disabled:opacity-70 sm:w-auto"
     >
       {pending ? "Sending…" : children}
     </button>

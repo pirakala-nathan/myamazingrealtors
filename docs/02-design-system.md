@@ -78,9 +78,8 @@ Fonts are self-hosted through `next/font/google`, which means there are no reque
 - **Containers:** max width 1280px, with 16px gutters on phones and 24px on desktop (`container-site` utility).
 - **Section padding:** 80–104px vertically on desktop and about 80px on phones.
 - **Radius:**
-  - 0 for images and cards (editorial look)
-  - `rounded-full` for buttons and the mobile action bar
-  - inputs are pill-shaped on dark sections
+  - 0 everywhere: images, cards, inputs, buttons and the mobile action bar (square-cornered boxes, changed from pill buttons on 2026-11-18)
+  - circles only for decorative icons (the video play icon and the form success tick)
 - **Touch targets:** at least 44px. Buttons are `min-h-12`.
 
 ## Core components (in `web/src/components`)

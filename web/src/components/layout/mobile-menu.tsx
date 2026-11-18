@@ -33,7 +33,7 @@ export function MobileMenu() {
     };
   }, [open]);
 
-  const buttonClass = "flex size-11 items-center justify-center rounded-full border-[1.5px] border-navy-900";
+  const buttonClass = "flex size-11 items-center justify-center rounded-none border-[1.5px] border-navy-900";
 
   return (
     <div className="xl:hidden">
@@ -76,10 +76,10 @@ export function MobileMenu() {
               </Link>
             ))}
             <div className="mt-8 flex flex-col gap-3 pb-10">
-              <Link href="/contact" onClick={close} className="rounded-full bg-navy-900 py-4 text-center font-bold text-on-dark">
+              <Link href="/contact" onClick={close} className="rounded-none bg-navy-900 py-4 text-center font-bold text-on-dark">
                 Book a call with {site.agent.firstName}
               </Link>
-              <a href={site.agent.phoneHref} className="rounded-full border-[1.5px] border-navy-900 py-4 text-center font-bold">
+              <a href={site.agent.phoneHref} className="rounded-none border-[1.5px] border-navy-900 py-4 text-center font-bold">
                 Call {site.agent.phone}
               </a>
             </div>

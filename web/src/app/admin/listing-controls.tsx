@@ -25,7 +25,7 @@ export function AddListingForm() {
         <button
           type="submit"
           disabled={pending}
-          className="min-h-12 rounded-full bg-navy-900 px-8 font-bold text-on-dark hover:bg-navy-700 disabled:opacity-70"
+          className="min-h-12 rounded-none bg-navy-900 px-8 font-bold text-on-dark hover:bg-navy-700 disabled:opacity-70"
         >
           {pending ? "Looking up…" : "Add listing"}
         </button>
@@ -44,7 +44,7 @@ export function AddListingForm() {
 
 export function RowActions({ mlsNumber, title }: { mlsNumber: string; title: string }) {
   const [pending, start] = useTransition();
-  const button = "rounded-full border-[1.5px] border-navy-900 px-4 py-2 text-sm font-bold disabled:opacity-60";
+  const button = "rounded-none border-[1.5px] border-navy-900 px-4 py-2 text-sm font-bold disabled:opacity-60";
   return (
     <div className="flex gap-2">
       <button type="button" disabled={pending} className={button} onClick={() => start(() => refreshListing(mlsNumber))}>

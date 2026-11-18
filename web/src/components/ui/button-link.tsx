@@ -4,7 +4,7 @@ import type { ComponentProps } from "react";
 type Variant = "primary" | "secondary" | "accent" | "outline-light";
 
 const base =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3.5 text-base font-bold transition-colors";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-none px-6 py-3.5 text-base font-bold transition-colors";
 
 const variants: Record<Variant, string> = {
   primary: "bg-navy-900 text-on-dark hover:bg-navy-700 hover:text-aqua-300",

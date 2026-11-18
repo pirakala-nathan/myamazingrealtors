@@ -54,11 +54,11 @@ export function SearchStrip() {
           name="q"
           type="search"
           placeholder="City, neighbourhood, address or MLS®#"
-          className="min-h-13 flex-1 rounded-full border border-navy-500 bg-navy-700 px-5 text-base text-white placeholder:text-on-dark-subtle"
+          className="min-h-13 flex-1 rounded-none border border-navy-500 bg-navy-700 px-5 text-base text-white placeholder:text-on-dark-subtle"
         />
         <button
           type="submit"
-          className="min-h-13 rounded-full bg-aqua-400 px-7 font-extrabold text-navy-900 hover:bg-aqua-300"
+          className="min-h-13 rounded-none bg-aqua-400 px-7 font-extrabold text-navy-900 hover:bg-aqua-300"
         >
           Search
         </button>
