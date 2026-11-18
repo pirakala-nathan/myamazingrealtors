@@ -79,12 +79,15 @@ function Segment({
   label,
   htmlFor,
   children,
+  after,
   className = "",
 }: {
   icon: keyof typeof icons;
   label: string;
   htmlFor: string;
   children: ReactNode;
+  /** Rendered after the field, positioned against the segment (e.g. a dropdown). */
+  after?: ReactNode;
   className?: string;
 }) {
   return (
@@ -98,6 +101,7 @@ function Segment({
         </label>
         {children}
       </div>
+      {after}
     </div>
   );
 }
@@ -206,6 +210,114 @@ export function SearchPanel({
   const searchAll = () => router.push(filtersHref({ ...filters, q }));
   const typeOptions = [{ value: "", label: "Any type" }, ...types.map((t) => ({ value: t, label: t }))];
 
+  // Dropdown hanging under the Location field: locations to pick from, then matching homes.
+  const dropdown = (
+    <div
+      id={`${id}-results`}
+      role="listbox"
+      aria-label="Locations and matching listings"
+      className={`absolute -inset-x-px top-full z-30 mt-px max-h-[min(60vh,520px)] origin-top border border-cloud-300 lg:right-auto lg:w-[max(100%,420px)] overflow-y-auto bg-white shadow-[0_28px_60px_-24px_rgba(10,29,40,0.55)] transition-[opacity,transform] duration-300 ease-out ${
+        open ? "translate-y-0 scale-y-100 opacity-100" : "pointer-events-none -translate-y-2 scale-y-95 opacity-0"
+      }`}
+    >
+      {open && (
+        <>
+          {cityOptions.length > 0 && (
+            <div className="py-2">
+              <p className="px-5 pb-1 pt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted">Locations</p>
+              <ul>
+                {cityOptions.map((c, i) => (
+                  <li key={c.name} id={`${id}-r${i}`} role="option" aria-selected={i === highlight}>
+                    <button
+                      type="button"
+                      onClick={() => pickCity(c.name)}
+                      onMouseEnter={() => setHighlight(i)}
+                      className={`hero-result flex w-full items-center gap-3 px-5 py-2.5 text-left transition-colors ${
+                        i === highlight ? "bg-mist-100" : ""
+                      }`}
+                      style={{ animationDelay: `${Math.min(i, 8) * 35}ms` }}
+                    >
+                      <Icon name="pin" />
+                      <span className="font-semibold text-ink">{c.name}</span>
+                      <span className="ml-auto text-sm text-muted">
+                        {c.count > 0 ? `${c.count} listing${c.count === 1 ? "" : "s"}` : "Service area"}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {!q || pickedCity ? null : results.length > 0 ? (
+            <ul className={`flex flex-col py-2 ${cityOptions.length ? "border-t border-cloud-300" : ""}`}>
+              <li
+                aria-hidden="true"
+                className="px-5 pb-1 pt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted"
+              >
+                Homes
+              </li>
+              {results.map((l, n) => {
+                const i = cityOptions.length + n;
+                return (
+                  <li key={l.key} id={`${id}-r${i}`} role="option" aria-selected={i === highlight}>
+                    <Link
+                      href={l.href}
+                      onMouseEnter={() => setHighlight(i)}
+                      className={`hero-result flex items-center gap-4 px-3 py-2.5 transition-colors ${i === highlight ? "bg-mist-100" : ""}`}
+                      style={{ animationDelay: `${n * 60}ms` }}
+                    >
+                      <span className="relative h-14 w-20 shrink-0 overflow-hidden bg-cloud-300">
+                        {l.src && (
+                          <Image
+                            src={l.src}
+                            alt=""
+                            fill
+                            sizes="80px"
+                            unoptimized={isRemote(l.src)}
+                            className="object-cover"
+                          />
+                        )}
+                      </span>
+                      <span className="flex min-w-0 flex-col">
+                        <span className="truncate font-bold text-ink">{l.title}</span>
+                        <span className="truncate text-sm text-muted">{l.place}</span>
+                      </span>
+                      <span
+                        className={`ml-auto shrink-0 px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] ${
+                          l.over ? "bg-navy-900 text-aqua-300" : "bg-aqua-100 text-navy-900"
+                        }`}
+                      >
+                        {l.status}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : cityOptions.length === 0 ? (
+            <p className="hero-result px-5 py-4 text-sm text-body">
+              No listings match that search right now.{" "}
+              <Link href="/contact" className="font-bold text-aqua-700 underline">
+                Ask {firstName} to send new ones
+              </Link>
+              .
+            </p>
+          ) : null}
+          {q && !pickedCity && (
+            <button
+              type="button"
+              onClick={searchAll}
+              className="flex w-full items-center justify-between border-t border-cloud-300 px-5 py-3.5 text-left text-sm font-extrabold text-aqua-700 hover:bg-mist-100 hover:text-navy-900"
+            >
+              {matching.length > MAX_RESULTS ? `See all ${matching.length} results` : "Open the full search"}
+              <span aria-hidden="true">→</span>
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+
   return (
     <div ref={rootRef} className="hero-rise relative" style={{ animationDelay: "var(--hero-delay, 0ms)" }}>
       {/* Tabs sitting on top of the panel. */}
@@ -255,7 +367,13 @@ export function SearchPanel({
       >
         {filters.show && <input type="hidden" name="show" value={filters.show} />}
 
-        <Segment icon="pin" label="Location" htmlFor={`${id}-q`} className="md:col-span-3 lg:col-span-1">
+        <Segment
+          icon="pin"
+          label="Location"
+          htmlFor={`${id}-q`}
+          className="md:col-span-3 lg:col-span-1"
+          after={dropdown}
+        >
           <span className="relative flex">
             <input
               id={`${id}-q`}
@@ -364,112 +482,6 @@ export function SearchPanel({
           </button>
         </div>
       </form>
-
-      {/* Live results under the panel. */}
-      <div
-        id={`${id}-results`}
-        role="listbox"
-        aria-label="Locations and matching listings"
-        className={`absolute left-0 top-full z-30 mt-2 max-h-[min(70vh,520px)] w-full max-w-[560px] origin-top overflow-y-auto bg-white shadow-[0_28px_60px_-24px_rgba(10,29,40,0.55)] transition-[opacity,transform] duration-300 ease-out ${
-          open ? "translate-y-0 scale-y-100 opacity-100" : "pointer-events-none -translate-y-2 scale-y-95 opacity-0"
-        }`}
-      >
-        {open && (
-          <>
-            {cityOptions.length > 0 && (
-              <div className="py-2">
-                <p className="px-5 pb-1 pt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted">Locations</p>
-                <ul>
-                  {cityOptions.map((c, i) => (
-                    <li key={c.name} id={`${id}-r${i}`} role="option" aria-selected={i === highlight}>
-                      <button
-                        type="button"
-                        onClick={() => pickCity(c.name)}
-                        onMouseEnter={() => setHighlight(i)}
-                        className={`hero-result flex w-full items-center gap-3 px-5 py-2.5 text-left transition-colors ${
-                          i === highlight ? "bg-mist-100" : ""
-                        }`}
-                        style={{ animationDelay: `${Math.min(i, 8) * 35}ms` }}
-                      >
-                        <Icon name="pin" />
-                        <span className="font-semibold text-ink">{c.name}</span>
-                        <span className="ml-auto text-sm text-muted">
-                          {c.count > 0 ? `${c.count} listing${c.count === 1 ? "" : "s"}` : "Service area"}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {!q || pickedCity ? null : results.length > 0 ? (
-              <ul className={`flex flex-col py-2 ${cityOptions.length ? "border-t border-cloud-300" : ""}`}>
-                <li
-                  aria-hidden="true"
-                  className="px-5 pb-1 pt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted"
-                >
-                  Homes
-                </li>
-                {results.map((l, n) => {
-                  const i = cityOptions.length + n;
-                  return (
-                    <li key={l.key} id={`${id}-r${i}`} role="option" aria-selected={i === highlight}>
-                      <Link
-                        href={l.href}
-                        onMouseEnter={() => setHighlight(i)}
-                        className={`hero-result flex items-center gap-4 px-3 py-2.5 transition-colors ${i === highlight ? "bg-mist-100" : ""}`}
-                        style={{ animationDelay: `${n * 60}ms` }}
-                      >
-                        <span className="relative h-14 w-20 shrink-0 overflow-hidden bg-cloud-300">
-                          {l.src && (
-                            <Image
-                              src={l.src}
-                              alt=""
-                              fill
-                              sizes="80px"
-                              unoptimized={isRemote(l.src)}
-                              className="object-cover"
-                            />
-                          )}
-                        </span>
-                        <span className="flex min-w-0 flex-col">
-                          <span className="truncate font-bold text-ink">{l.title}</span>
-                          <span className="truncate text-sm text-muted">{l.place}</span>
-                        </span>
-                        <span
-                          className={`ml-auto shrink-0 px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] ${
-                            l.over ? "bg-navy-900 text-aqua-300" : "bg-aqua-100 text-navy-900"
-                          }`}
-                        >
-                          {l.status}
-                        </span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : cityOptions.length === 0 ? (
-              <p className="hero-result px-5 py-4 text-sm text-body">
-                No listings match that search right now.{" "}
-                <Link href="/contact" className="font-bold text-aqua-700 underline">
-                  Ask {firstName} to send new ones
-                </Link>
-                .
-              </p>
-            ) : null}
-            {q && !pickedCity && (
-              <button
-                type="button"
-                onClick={searchAll}
-                className="flex w-full items-center justify-between border-t border-cloud-300 px-5 py-3.5 text-left text-sm font-extrabold text-aqua-700 hover:bg-mist-100 hover:text-navy-900"
-              >
-                {matching.length > MAX_RESULTS ? `See all ${matching.length} results` : "Open the full search"}
-                <span aria-hidden="true">→</span>
-              </button>
-            )}
-          </>
-        )}
-      </div>
     </div>
   );
 }
