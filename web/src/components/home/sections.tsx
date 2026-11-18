@@ -91,7 +91,7 @@ export async function WatchSection() {
 
   if (reels.length > 0) {
     return (
-      <section className="overflow-hidden bg-navy-900 text-on-dark">
+      <section id="videos" className="scroll-mt-20 overflow-hidden bg-navy-900 text-on-dark">
         <div className="container-site pt-20 md:pt-24">
           <div className="flex max-w-2xl flex-col gap-4.5">{intro}</div>
         </div>
@@ -105,7 +105,7 @@ export async function WatchSection() {
   }
 
   return (
-    <section className="bg-navy-900 text-on-dark">
+    <section id="videos" className="scroll-mt-20 bg-navy-900 text-on-dark">
       <div className="container-site flex flex-col gap-12 py-20 md:py-24 lg:flex-row lg:items-center">
         <div className="flex flex-col gap-4.5 lg:flex-[1_1_360px]">{intro}</div>
         {/* Placeholder poster until a real video is supplied. */}
@@ -143,7 +143,7 @@ export async function Testimonials() {
   const reviews = google?.reviews ?? [];
 
   return (
-    <section className="container-site py-20 md:py-26">
+    <section id="reviews" className="container-site scroll-mt-20 py-20 md:py-26">
       <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <h2 className="font-display text-[clamp(2.5rem,4.6vw,4rem)] font-semibold leading-none">What clients say.</h2>
         {google && (

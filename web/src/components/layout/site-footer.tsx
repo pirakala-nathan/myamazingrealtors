@@ -26,6 +26,8 @@ export function SiteFooter() {
             <Link href="/buy" className="hover:text-aqua-300">Buying</Link>
             <Link href="/sell" className="hover:text-aqua-300">Selling</Link>
             <Link href="/our-listings" className="hover:text-aqua-300">PK’s listings</Link>
+            <Link href="/#videos" className="hover:text-aqua-300">Videos</Link>
+            <Link href="/#reviews" className="hover:text-aqua-300">Reviews</Link>
             <Link href="/home-evaluation" className="hover:text-aqua-300">Home valuation</Link>
             <Link href="/contact" className="hover:text-aqua-300">Contact</Link>
           </div>

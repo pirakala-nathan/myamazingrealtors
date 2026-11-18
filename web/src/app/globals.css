@@ -282,3 +282,35 @@
 @keyframes review-progress {
   to { transform: scaleX(1); }
 }
+
+/* Listing spotlight caption (src/components/home/listing-spotlight.tsx): slides up with each new listing. */
+.spotlight-caption {
+  animation: spotlight-caption 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes spotlight-caption {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+/* Sections that rise into view the first time they scroll on screen (src/components/home/reveal.tsx). */
+.reveal > * {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.reveal[data-shown] > * {
+  opacity: 1;
+  transform: none;
+}
+.reveal[data-shown] > *:nth-child(2) {
+  transition-delay: 0.15s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .spotlight-caption {
+    animation: none;
+  }
+  .reveal > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

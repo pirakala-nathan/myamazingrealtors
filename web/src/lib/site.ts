@@ -64,6 +64,8 @@ export const mainNav: NavItem[] = [
   { label: "Buy", href: "/buy" },
   { label: "Sell", href: "/sell" },
   { label: "Listings", href: "/our-listings" },
+  { label: "Videos", href: "/#videos" },
+  { label: "Reviews", href: "/#reviews" },
   // Communities returns once each city has real local content.
   { label: "Contact", href: "/contact" },
 ];

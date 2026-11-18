@@ -5,7 +5,10 @@ import { heroStats, recentSales } from "@/lib/content/home";
 import { formatRating, getGoogleReviews } from "@/lib/google-reviews";
 import { getListings } from "@/lib/listings/store";
 import { listingTitle, statusLabel } from "@/lib/listings/types";
-import { PhotoRotator, type RotatorPhoto } from "@/components/home/photo-rotator";
+import { ListingSpotlight, type SpotlightListing } from "@/components/home/listing-spotlight";
+import { Reveal } from "@/components/home/reveal";
+import { isOverAsking } from "@/components/listings/status-badge";
+import { priceLine } from "@/components/listings/listing-card";
 
 /** Direction C, "Light & Airy": serif headline, circular portrait and a stats column. */
 export async function Hero() {
@@ -104,54 +107,127 @@ export function ContactStrip() {
   );
 }
 
-/** MLS® search beside a small grid of recent listing photos. */
 /**
- * Cover photos for the search section: newest listings PK has added first (any status),
- * topped up with the sample sale photos until there are at least three.
+ * Showcase for the search section: the newest listings PK has added (any status, newest first),
+ * topped up with the sample sales until there are at least three.
  */
-async function searchPhotos(): Promise<RotatorPhoto[]> {
-  const listings = (await getListings())
+async function spotlightListings(): Promise<{ items: SpotlightListing[]; forSale: number; sold: number }> {
+  const all = await getListings();
+  const items: SpotlightListing[] = all
     .filter((l) => l.photos.length > 0)
     .sort((a, b) => b.addedAt.localeCompare(a.addedAt))
-    .slice(0, 12)
-    .map((l) => ({ src: l.photos[0], alt: `${listingTitle(l)}, ${statusLabel[l.status].toLowerCase()}`, href: `/listings/${l.slug}` }));
-  const samples = recentSales.map((s) => ({ src: s.image, alt: s.imageAlt, href: null }));
-  return listings.length >= 3 ? listings : [...listings, ...samples].slice(0, Math.max(3, listings.length));
+    .slice(0, 6)
+    .map((l) => {
+      const over = isOverAsking(l);
+      return {
+        key: l.mlsNumber,
+        src: l.photos[0],
+        alt: `${listingTitle(l)}, ${statusLabel[l.status].toLowerCase()}`,
+        href: `/listings/${l.slug}`,
+        title: l.street ?? l.city,
+        place: [l.city, l.propertyType].filter(Boolean).join(" · "),
+        status: over ? (l.status === "leased" ? "Leased over asking" : "Sold over asking") : statusLabel[l.status],
+        over,
+        price: priceLine(l),
+      };
+    });
+  const samples: SpotlightListing[] = recentSales.map((s) => ({
+    key: s.address,
+    src: s.image,
+    alt: s.imageAlt,
+    href: null,
+    title: s.address,
+    place: s.city.startsWith("[") ? "Durham & East GTA" : s.city,
+    status: s.status === "sold-over-asking" ? "Sold over asking" : "Leased over asking",
+    over: true,
+    price: null,
+  }));
+  return {
+    items: items.length >= 3 ? items : [...items, ...samples].slice(0, Math.max(3, items.length)),
+    forSale: all.filter((l) => l.status === "active" || l.status === "pending").length,
+    sold: all.filter((l) => l.status === "sold" || l.status === "leased").length,
+  };
 }
 
+/** "Search PK's listings": search box, city shortcuts and the animated listing spotlight. */
 export async function SearchSection() {
-  const photos = await searchPhotos();
+  const { items, forSale, sold } = await spotlightListings();
   return (
-    <section className="container-site grid items-center gap-12 pb-20 pt-6 md:pb-26 lg:grid-cols-2 lg:gap-14">
-      <div className="flex flex-col">
-        <h2 className="font-display text-[clamp(2.5rem,4.6vw,3.5rem)] font-semibold leading-[1.02]">
-          Search {site.agent.firstName}’s listings
-        </h2>
-        <span aria-hidden="true" className="my-5 block h-[3px] w-14 bg-aqua-400" />
-        <p className="max-w-[440px] text-base leading-relaxed text-body">
-          Homes {site.agent.firstName} is selling now and recent sales across Durham and the East GTA. Looking for
-          something else? {site.agent.firstName} can send you new listings that match your search.
-        </p>
-        <form action="/our-listings" method="get" role="search" className="mt-7 flex max-w-[480px] flex-col gap-3 sm:flex-row sm:gap-0">
-          <label htmlFor="home-search" className="sr-only">
-            Search {site.agent.firstName}’s listings by city, street or MLS® number
-          </label>
-          <input
-            id="home-search"
-            name="q"
-            type="search"
-            placeholder="City, street or MLS®#"
-            className="min-h-13 min-w-0 flex-1 rounded-none border border-cloud-400 bg-white px-5 text-base text-ink placeholder:text-muted"
-          />
-          <button
-            type="submit"
-            className="min-h-13 rounded-none bg-navy-900 px-7 font-extrabold text-on-dark hover:bg-navy-700 hover:text-aqua-300"
-          >
-            Search
-          </button>
-        </form>
-      </div>
-      <PhotoRotator photos={photos} />
+    <section className="relative overflow-hidden bg-mist-100 py-20 md:py-26">
+      {/* A large, faint logo-cyan block behind the photos gives the section depth. */}
+      <div aria-hidden="true" className="absolute inset-y-0 right-0 hidden w-[38%] bg-aqua-100 lg:block" />
+      <Reveal className="container-site relative grid items-center gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+        <div className="flex flex-col">
+          <p className="eyebrow text-aqua-700">Listings</p>
+          <h2 className="mt-4 font-display text-[clamp(2.5rem,4.6vw,3.75rem)] font-semibold leading-[1.02]">
+            Search {site.agent.firstName}’s listings<span className="text-aqua-400">.</span>
+          </h2>
+          <p className="mt-5 max-w-[460px] text-base leading-relaxed text-body">
+            Homes {site.agent.firstName} is selling now and recent sales across Durham and the East GTA. Looking for
+            something else? {site.agent.firstName} can send you new listings that match your search.
+          </p>
+
+          <form action="/our-listings" method="get" role="search" className="group mt-8 flex max-w-[500px] flex-col gap-3 sm:flex-row sm:gap-0">
+            <label htmlFor="home-search" className="sr-only">
+              Search {site.agent.firstName}’s listings by city, street or MLS® number
+            </label>
+            <span className="relative flex min-w-0 flex-1">
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted transition-colors group-focus-within:text-aqua-700"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-4-4" />
+              </svg>
+              <input
+                id="home-search"
+                name="q"
+                type="search"
+                placeholder="City, street or MLS®#"
+                className="min-h-14 w-full min-w-0 rounded-none border border-cloud-400 bg-white pl-12 pr-4 text-base text-ink shadow-[0_10px_30px_-18px_rgba(10,29,40,0.45)] transition-[border-color,box-shadow] placeholder:text-muted focus:border-aqua-500 focus:shadow-[0_14px_36px_-16px_rgba(0,178,219,0.55)] focus:outline-none"
+              />
+            </span>
+            <button
+              type="submit"
+              className="min-h-14 rounded-none bg-navy-900 px-8 font-extrabold text-on-dark transition-colors hover:bg-aqua-400 hover:text-navy-900"
+            >
+              Search
+            </button>
+          </form>
+
+          <div className="mt-5 flex flex-wrap gap-2" aria-label="Browse by city">
+            {site.serviceAreas.map((city) => (
+              <Link
+                key={city}
+                href={`/our-listings?q=${encodeURIComponent(city)}`}
+                className="border border-cloud-400 bg-white px-3.5 py-2 text-sm font-semibold text-body transition-all hover:-translate-y-0.5 hover:border-navy-900 hover:text-ink"
+              >
+                {city}
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-cloud-300 pt-5 text-sm">
+            {forSale + sold > 0 && (
+              <span className="text-body">
+                <strong className="font-display text-2xl font-semibold text-ink">{forSale}</strong> for sale ·{" "}
+                <strong className="font-display text-2xl font-semibold text-ink">{sold}</strong> recently sold
+              </span>
+            )}
+            <Link href="/our-listings" className="font-extrabold text-aqua-700 hover:text-navy-900">
+              See all listings →
+            </Link>
+          </div>
+        </div>
+
+        <ListingSpotlight listings={items} />
+      </Reveal>
     </section>
   );
 }

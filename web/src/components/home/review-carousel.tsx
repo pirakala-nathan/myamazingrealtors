@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePause } from "./use-pause";
+import { useDragScroll, usePause } from "./use-pause";
 
 export type ReviewCard = {
   text: string;
@@ -30,7 +30,7 @@ function Stars({ rating }: { rating: number }) {
  * Google reviews, animated like the "Watch PK" reels: a row of cards where one review is
  * highlighted (cyan outline, soft glow, a progress bar filling along its top). When the bar fills,
  * the row glides on to the next review and loops. The others wait, dimmed.
- * Swipe, use the arrows, or tap a dimmed card to jump to it. Pauses on hover, focus or touch,
+ * Swipe or drag, use the arrows, or tap a dimmed card to jump to it. Pauses briefly after a tap or drag,
  * while off screen or in a hidden tab; reduced-motion visitors get a still row they move themselves.
  */
 export function ReviewCarousel({ reviews }: { reviews: ReviewCard[] }) {
@@ -39,6 +39,7 @@ export function ReviewCarousel({ reviews }: { reviews: ReviewCard[] }) {
   const [inView, setInView] = useState(false);
   const [entered, setEntered] = useState(false);
   const { paused, handlers: pauseHandlers } = usePause();
+  useDragScroll(trackRef);
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
