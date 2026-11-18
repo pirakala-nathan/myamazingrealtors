@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { site } from "@/lib/site";
 import { insights, services, testimonials } from "@/lib/content/home";
+import { getGoogleReviews } from "@/lib/google-reviews";
 import { ButtonLink } from "@/components/ui/button-link";
 
 const serviceIcons = {
@@ -112,25 +113,98 @@ export function WatchSection() {
   );
 }
 
-export function Testimonials() {
+function Stars({ rating }: { rating: number }) {
+  const full = Math.round(rating);
+  return (
+    <span className="tracking-[3px] text-aqua-500" role="img" aria-label={`${rating} out of 5 stars`}>
+      {"★".repeat(full)}
+      <span className="text-cloud-400">{"★".repeat(5 - full)}</span>
+    </span>
+  );
+}
+
+export async function Testimonials() {
+  const google = await getGoogleReviews();
+  const reviews = google?.reviews.slice(0, 3) ?? [];
+
   return (
     <section className="container-site py-20 md:py-26">
-      <h2 className="mb-10 font-display text-[clamp(2.5rem,4.6vw,4rem)] font-semibold leading-none">What clients say.</h2>
-      <ul className="grid gap-5 md:grid-cols-3">
-        {testimonials.map((t, i) => (
-          <li key={i}>
-            <figure className="flex h-full flex-col gap-4.5 border border-cloud-300 bg-mist-50 p-8">
-              <span className="tracking-[3px] text-aqua-500" role="img" aria-label="5 out of 5 stars">
-                ★★★★★
-              </span>
-              <blockquote className="font-display text-2xl italic leading-snug">{t.quote}</blockquote>
-              <figcaption className="mt-auto text-sm font-bold">
-                {t.name} <span className="font-medium text-muted">· {t.context}</span>
-              </figcaption>
-            </figure>
-          </li>
-        ))}
-      </ul>
+      <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <h2 className="font-display text-[clamp(2.5rem,4.6vw,4rem)] font-semibold leading-none">What clients say.</h2>
+        {google && (
+          <p className="text-sm text-body">
+            <strong className="font-display text-2xl font-semibold text-ink">{google.rating.toFixed(1)}</strong>{" "}
+            <Stars rating={google.rating} /> from {google.count} reviews on Google Maps
+          </p>
+        )}
+      </div>
+
+      {reviews.length > 0 ? (
+        <ul className="grid gap-5 md:grid-cols-3">
+          {reviews.map((r, i) => (
+            <li key={i}>
+              <figure className="flex h-full flex-col gap-4.5 border border-cloud-300 bg-mist-50 p-8">
+                <Stars rating={r.rating} />
+                <blockquote className="line-clamp-[8] font-display text-xl italic leading-snug">“{r.text}”</blockquote>
+                <figcaption className="mt-auto flex items-center gap-3 text-sm">
+                  {r.authorPhoto && (
+                    // Google-hosted profile photo; required author attribution, so shown as-is.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={r.authorPhoto} alt="" width={36} height={36} className="size-9 rounded-full" referrerPolicy="no-referrer" />
+                  )}
+                  <span className="flex flex-col">
+                    {r.authorUri ? (
+                      <a href={r.authorUri} target="_blank" rel="noopener noreferrer" className="font-bold hover:text-aqua-700">
+                        {r.author}
+                      </a>
+                    ) : (
+                      <span className="font-bold">{r.author}</span>
+                    )}
+                    <span className="text-muted">
+                      {r.relativeTime}
+                      {r.reviewUri && (
+                        <>
+                          {" · "}
+                          <a href={r.reviewUri} target="_blank" rel="noopener noreferrer" className="underline hover:text-aqua-700">
+                            View on Google Maps
+                          </a>
+                        </>
+                      )}
+                    </span>
+                  </span>
+                </figcaption>
+              </figure>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <ul className="grid gap-5 md:grid-cols-3">
+          {testimonials.map((t, i) => (
+            <li key={i}>
+              <figure className="flex h-full flex-col gap-4.5 border border-cloud-300 bg-mist-50 p-8">
+                <Stars rating={5} />
+                <blockquote className="font-display text-2xl italic leading-snug">{t.quote}</blockquote>
+                <figcaption className="mt-auto text-sm font-bold">
+                  {t.name} <span className="font-medium text-muted">· {t.context}</span>
+                </figcaption>
+              </figure>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {google && (
+        <p className="mt-6 flex flex-col gap-2 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            Source: Google Maps. Showing Google’s most relevant reviews. Reviews aren’t verified by Google.
+          </span>
+          {google.mapsUri && (
+            <a href={google.mapsUri} target="_blank" rel="noopener noreferrer" className="font-bold text-aqua-700 hover:text-navy-900">
+              Read all {google.count} reviews on Google Maps →
+            </a>
+          )}
+        </p>
+      )}
     </section>
   );
 }

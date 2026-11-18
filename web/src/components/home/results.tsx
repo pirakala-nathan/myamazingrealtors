@@ -1,8 +1,15 @@
 import Image from "next/image";
-import { recentSales, stats, formatPrice } from "@/lib/content/home";
+import { recentSales, stats as baseStats, formatPrice } from "@/lib/content/home";
+import { formatRating, getGoogleReviews } from "@/lib/google-reviews";
 import { ButtonLink } from "@/components/ui/button-link";
 
-export function ResultsBand() {
+export async function ResultsBand() {
+  const google = await getGoogleReviews();
+  const stats = baseStats.map((s) =>
+    s.label === "Google rating" && google
+      ? { ...s, value: formatRating(google.rating), detail: `From ${google.count} Google reviews` }
+      : s,
+  );
   return (
     <section className="bg-navy-800 text-on-dark">
       <div className="container-site flex flex-col gap-11 py-20 md:py-24">

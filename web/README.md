@@ -64,6 +64,12 @@ Every form submission is saved in Firestore. Emailing PK about it needs [Resend]
 
 Without the first two, submissions are still saved and the function log shows "Email alert skipped".
 
+## Google rating and reviews
+
+`src/lib/google-reviews.ts` pulls PK's Google rating, review count and up to 5 reviews (Google's "most relevant") from the Places API (New), refreshed about every 6 hours. The homepage shows the rating in the hero and results band, and 3 reviews in "What clients say" with the author's name, photo and a link to each review on Google Maps, as Google's policies require. Reviews are never saved to the database.
+
+Set `GOOGLE_PLACES_API_KEY` (a server-only key restricted to "Places API (New)") and `GOOGLE_PLACE_ID` (PK's Business Profile place ID). Without them, the placeholders show.
+
 ## Opening animation
 
 `src/components/layout/intro.tsx` shows a black screen where the logo's hands form the roof, the windows light up and a loading bar fills, then it fades into the site (about 3 seconds). It plays once per browser session, never on `/admin`, and not for visitors who ask their device for reduced motion. Add `?intro` to any URL to replay it. The timing is in the "Intro" block at the end of `src/app/globals.css`.

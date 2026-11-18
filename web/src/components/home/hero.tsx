@@ -2,9 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { site } from "@/lib/site";
 import { heroStats, recentSales } from "@/lib/content/home";
+import { formatRating, getGoogleReviews } from "@/lib/google-reviews";
 
 /** Direction C, "Light & Airy": serif headline, circular portrait and a stats column. */
-export function Hero() {
+export async function Hero() {
+  const google = await getGoogleReviews();
+  const stats = heroStats.map((s) =>
+    s.label === "Google rating" && google ? { ...s, value: formatRating(google.rating) } : s,
+  );
   return (
     <section className="overflow-hidden bg-mist-100">
       <div className="container-site grid items-center gap-10 pb-4 pt-10 md:pt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)_180px] lg:gap-12">
@@ -52,7 +57,7 @@ export function Hero() {
         </div>
 
         <dl className="grid grid-cols-3 gap-4 lg:grid-cols-1 lg:gap-8">
-          {heroStats.map((s) => (
+          {stats.map((s) => (
             <div key={s.label} className="flex flex-col gap-1.5">
               <dt className="text-sm font-semibold text-body">{s.label}</dt>
               <dd className="order-first font-display text-[40px] font-semibold leading-none sm:text-5xl">{s.value}</dd>
