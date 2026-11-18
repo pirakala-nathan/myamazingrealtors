@@ -7,7 +7,7 @@ import { getListings } from "@/lib/listings/store";
 import { statusLabel } from "@/lib/listings/types";
 import { SearchPanel } from "@/components/listings/search-panel";
 import { searchableListings } from "@/components/listings/searchable";
-import { typeOptions } from "@/lib/listings/filters";
+import { locationOptions, typeOptions } from "@/lib/listings/filters";
 import { ListingsCarousel, type CarouselListing } from "@/components/home/listings-carousel";
 import { Reveal } from "@/components/home/reveal";
 import { isOverAsking } from "@/components/listings/status-badge";
@@ -90,7 +90,13 @@ export async function ContactStrip() {
     // Above the next section so the search results can drop down over it; space below before Results.
     <section className="relative z-20 bg-mist-100 pb-16 pt-10 md:pb-24 md:pt-14">
       <div className="container-site">
-        <SearchPanel listings={searchableListings(all)} types={typeOptions(all)} cities={site.serviceAreas} firstName={agent.firstName} />
+        <SearchPanel
+          listings={searchableListings(all)}
+          types={typeOptions(all)}
+          cities={site.serviceAreas}
+          locations={locationOptions(all, site.serviceAreas)}
+          firstName={agent.firstName}
+        />
         <div className="grid bg-navy-900 text-on-dark md:grid-cols-3">
           <a href={agent.phoneHref} className="flex flex-col justify-center gap-1.5 border-b border-navy-600 px-7 py-6 hover:bg-navy-800 md:border-b-0 md:border-r">
             <span className="eyebrow text-xs text-on-dark-subtle">Call or text</span>

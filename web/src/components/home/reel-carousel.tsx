@@ -85,6 +85,21 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
     setHovered({ index: i, whileActive: active });
     setEager(true);
   };
+  // Mouse hover preview: which reel is being pointed at, and reels that should start buffering.
+  const [previewing, setPreviewing] = useState<number | null>(null);
+  const [warmed, setWarmed] = useState<number[]>([]);
+  const previewTimer = useRef(0);
+  useEffect(() => () => window.clearTimeout(previewTimer.current), []);
+  const startPreview = (i: number) => {
+    setWarmed((w) => (w.includes(i) ? w : [...w, i]));
+    window.clearTimeout(previewTimer.current);
+    // A short pause so sweeping the mouse across the row doesn't start every reel.
+    previewTimer.current = window.setTimeout(() => setPreviewing(i), 120);
+  };
+  const stopPreview = () => {
+    window.clearTimeout(previewTimer.current);
+    setPreviewing(null);
+  };
 
   /*
    * HD on large screens. The player always opens with the light version (the same file as the preview,
@@ -107,7 +122,7 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
   const closePlayer = () => {
     const player = showing();
     const preview = open === null ? null : videoRefs.current[open];
-    if (player && preview && open === active && player.currentTime < (player.duration || Infinity) - 0.3) {
+    if (player && preview && player.currentTime < (player.duration || Infinity) - 0.3) {
       preview.currentTime = player.currentTime;
     }
     playerRef.current?.pause();
@@ -242,28 +257,31 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
   }, []);
 
   const autoplay = inView && !hovering && open === null && !reducedMotion;
+  // With a mouse, pointing at a reel plays its preview (and holds the row still) until the pointer leaves.
+  const playing = previewing ?? active;
+  const playOn = previewing !== null ? open === null : autoplay;
 
-  // Play the active reel (muted), pause the rest.
+  // Play the current reel (muted), pause the rest.
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
-      if (i === active && autoplay) {
+      if (i === playing && playOn) {
         video.play().catch(() => {});
       } else {
         video.pause();
-        if (i !== active) video.currentTime = 0;
+        if (i !== active && i !== previewing) video.currentTime = 0;
       }
     });
-  }, [active, autoplay]);
+  }, [active, playing, playOn, previewing]);
 
   // Safety net: move on even if a video never fires "ended".
   useEffect(() => {
-    if (!autoplay || reels.length < 2) return;
+    if (!autoplay || previewing !== null || reels.length < 2) return;
     const id = window.setTimeout(() => {
       if (!document.hidden) next();
     }, FALLBACK_ADVANCE_MS);
     return () => window.clearTimeout(id);
-  }, [active, autoplay, next, reels.length]);
+  }, [active, autoplay, next, previewing, reels.length]);
 
   // Full-screen player: Esc closes, arrows switch.
   useEffect(() => {
@@ -298,7 +316,8 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
         className="flex snap-x snap-mandatory scroll-pl-4 gap-4 overflow-x-auto px-4 py-4 [-ms-overflow-style:none] [scrollbar-width:none] md:scroll-pl-6 md:gap-5 md:px-6 xl:scroll-pl-[calc((100%-80rem)/2+1.5rem)] xl:px-[calc((100%-80rem)/2+1.5rem)] [&::-webkit-scrollbar]:hidden"
       >
         {reels.map((reel, i) => {
-          const isActive = i === active;
+          // The reel that's playing: the one pointed at with a mouse, otherwise the row's current one.
+          const isActive = i === playing;
           return (
             <li
               key={reel.id}
@@ -310,8 +329,12 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
               <button
                 type="button"
                 onClick={() => (isActive ? openPlayer(i) : goTo(i))}
-                // Start loading the full-screen version as soon as the visitor shows interest.
-                onPointerEnter={() => warmUp(i)}
+                // Mouse: play this reel's preview while pointed at, and start loading the full-screen version.
+                onPointerEnter={(e) => {
+                  warmUp(i);
+                  if (e.pointerType === "mouse") startPreview(i);
+                }}
+                onPointerLeave={(e) => e.pointerType === "mouse" && stopPreview()}
                 onPointerDown={() => warmUp(i)}
                 onFocus={() => warmUp(i)}
                 aria-label={
@@ -334,7 +357,7 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
                   playsInline
                   // The playing reel and the one after it buffer ahead, so neither stalls when its turn comes.
                   preload={
-                    near && (i === active || i === (active + 1) % reels.length)
+                    (near && (i === active || i === (active + 1) % reels.length)) || warmed.includes(i)
                       ? "auto"
                       : i === 0 || !reel.poster
                         ? "metadata"
@@ -348,12 +371,18 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
                       });
                     }
                   }}
-                  onEnded={() => (reels.length > 1 ? next() : undefined)}
+                  onEnded={(e) => {
+                    // A reel being pointed at loops; otherwise the row moves on.
+                    if (i === previewing) {
+                      e.currentTarget.currentTime = 0;
+                      e.currentTarget.play().catch(() => {});
+                    } else if (i === active && reels.length > 1) next();
+                  }}
                   onWaiting={() => setPreviewBuffering(i)}
                   onPlaying={() => setPreviewBuffering((b) => (b === i ? null : b))}
                   className="size-full object-cover"
                 />
-                <BufferingOverlay show={isActive && autoplay && previewBuffering === i} />
+                <BufferingOverlay show={isActive && playOn && previewBuffering === i} />
                 <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-navy-950/75 px-4 py-3 text-on-dark">
                   <span className="line-clamp-2 text-sm font-bold">{reel.title ?? "Watch"}</span>
                   <span

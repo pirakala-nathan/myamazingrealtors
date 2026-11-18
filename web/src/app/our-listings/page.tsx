@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { ListingCard } from "@/components/listings/listing-card";
 import { SearchPanel } from "@/components/listings/search-panel";
 import { searchableListings } from "@/components/listings/searchable";
-import { describeFilters, hasFilters, matchesFilters, parseFilters, toFilterable, typeOptions } from "@/lib/listings/filters";
+import { describeFilters, hasFilters, locationOptions, matchesFilters, parseFilters, toFilterable, typeOptions } from "@/lib/listings/filters";
 import { getListings } from "@/lib/listings/store";
 import type { Listing } from "@/lib/listings/types";
 import { site } from "@/lib/site";
@@ -44,6 +44,7 @@ async function Results({ searchParams }: { searchParams: PageProps<"/our-listing
         listings={searchableListings(all)}
         types={typeOptions(all)}
         cities={site.serviceAreas}
+        locations={locationOptions(all, site.serviceAreas)}
         firstName={site.agent.firstName}
         initial={filters}
       />

@@ -56,16 +56,41 @@ const icons = {
 
 function Icon({ name }: { name: keyof typeof icons }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-aqua-700">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="shrink-0 text-aqua-700"
+    >
       {icons[name]}
     </svg>
   );
 }
 
 /** One labelled segment of the panel (icon, small caps label, control), divided from the next. */
-function Segment({ icon, label, htmlFor, children, className = "" }: { icon: keyof typeof icons; label: string; htmlFor: string; children: ReactNode; className?: string }) {
+function Segment({
+  icon,
+  label,
+  htmlFor,
+  children,
+  className = "",
+}: {
+  icon: keyof typeof icons;
+  label: string;
+  htmlFor: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className={`relative flex min-w-0 items-center gap-3 border-b border-cloud-300 px-4 py-3 transition-colors focus-within:bg-mist-50 lg:border-b-0 lg:border-r ${className}`}>
+    <div
+      className={`relative flex min-w-0 items-center gap-3 border-b border-cloud-300 px-4 py-3 transition-colors focus-within:bg-mist-50 lg:border-b-0 lg:border-r ${className}`}
+    >
       <Icon name={icon} />
       <div className="flex min-w-0 flex-1 flex-col">
         <label htmlFor={htmlFor} className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
@@ -77,7 +102,17 @@ function Segment({ icon, label, htmlFor, children, className = "" }: { icon: key
   );
 }
 
-function Select({ id, value, onChange, options }: { id: string; value: string; onChange: (v: string) => void; options: readonly { value: string; label: string }[] }) {
+function Select({
+  id,
+  value,
+  onChange,
+  options,
+}: {
+  id: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: readonly { value: string; label: string }[];
+}) {
   return (
     <span className="relative flex">
       <select
@@ -92,7 +127,16 @@ function Select({ id, value, onChange, options }: { id: string; value: string; o
           </option>
         ))}
       </select>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true" className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-muted">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        aria-hidden="true"
+        className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-muted"
+      >
         <path d="M6 9l6 6 6-6" />
       </svg>
     </span>
@@ -109,12 +153,15 @@ export function SearchPanel({
   listings,
   types,
   cities,
+  locations,
   firstName,
   initial,
 }: {
   listings: SearchableListing[];
   types: string[];
   cities: readonly string[];
+  /** Cities to pick from in the Location dropdown (with how many listings each). */
+  locations: { name: string; count: number }[];
   firstName: string;
   initial?: ListingFilters;
 }) {
@@ -132,9 +179,21 @@ export function SearchPanel({
   };
 
   const q = filters.q.trim();
-  const matching = q ? listings.filter((l) => matchesFilters(l, { ...filters, q })) : [];
+  const lower = q.toLowerCase();
+  // Picking a location fills the box with the city; typing filters the cities and also shows matching homes.
+  const pickedCity = locations.some((l) => l.name.toLowerCase() === lower);
+  const cityOptions = pickedCity ? [] : locations.filter((l) => l.name.toLowerCase().includes(lower));
+  const matching = q && !pickedCity ? listings.filter((l) => matchesFilters(l, { ...filters, q })) : [];
   const results = matching.slice(0, MAX_RESULTS);
-  const open = focused && q.length > 0;
+  const options = [
+    ...cityOptions.map((c) => ({ kind: "city" as const, city: c })),
+    ...results.map((l) => ({ kind: "home" as const, home: l })),
+  ];
+  const open = focused && options.length + (q && !pickedCity ? 1 : 0) > 0;
+  const pickCity = (name: string) => {
+    set({ q: name });
+    setFocused(false);
+  };
 
   useEffect(() => {
     const onDown = (e: PointerEvent) => {
@@ -165,13 +224,18 @@ export function SearchPanel({
                   selected ? "bg-white text-ink" : "bg-navy-900/[0.06] text-body hover:bg-white/70 hover:text-ink"
                 }`}
               >
-                {selected && <span aria-hidden="true" className="hero-sweep absolute inset-x-0 top-0 h-[3px] bg-aqua-400" />}
+                {selected && (
+                  <span aria-hidden="true" className="hero-sweep absolute inset-x-0 top-0 h-[3px] bg-aqua-400" />
+                )}
                 {o.label}
               </button>
             );
           })}
         </div>
-        <Link href="/home-evaluation" className="hidden pb-3 text-sm font-extrabold text-aqua-700 hover:text-navy-900 md:block">
+        <Link
+          href="/home-evaluation"
+          className="hidden pb-3 text-sm font-extrabold text-aqua-700 hover:text-navy-900 md:block"
+        >
           Selling? See what your home is worth →
         </Link>
       </div>
@@ -182,7 +246,9 @@ export function SearchPanel({
         method="get"
         onSubmit={(e) => {
           e.preventDefault();
-          if (open && highlight >= 0 && results[highlight]) router.push(results[highlight].href);
+          const option = open && highlight >= 0 ? options[highlight] : undefined;
+          if (option?.kind === "city") pickCity(option.city.name);
+          else if (option?.kind === "home") router.push(option.home.href);
           else searchAll();
         }}
         className="grid bg-white shadow-[0_24px_50px_-28px_rgba(10,29,40,0.55)] md:grid-cols-3 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)_auto]"
@@ -197,30 +263,61 @@ export function SearchPanel({
               type="search"
               autoComplete="off"
               value={filters.q}
-              onChange={(e) => set({ q: e.target.value })}
+              onChange={(e) => {
+                set({ q: e.target.value });
+                setFocused(true);
+              }}
               onFocus={() => setFocused(true)}
+              onClick={() => setFocused(true)}
               onKeyDown={(e) => {
-                if (!open || results.length === 0) return;
+                if (e.key === "Escape") return setFocused(false);
+                if (e.key === "ArrowDown" && !focused) return setFocused(true);
+                if (!open || options.length === 0) return;
                 if (e.key === "ArrowDown") {
                   e.preventDefault();
-                  setHighlight((h) => (h + 1) % results.length);
+                  setHighlight((h) => (h + 1) % options.length);
                 } else if (e.key === "ArrowUp") {
                   e.preventDefault();
-                  setHighlight((h) => (h <= 0 ? results.length - 1 : h - 1));
-                } else if (e.key === "Escape") {
-                  setFocused(false);
+                  setHighlight((h) => (h <= 0 ? options.length - 1 : h - 1));
                 }
               }}
-              placeholder={focused ? "City, street or MLS®#" : ""}
+              placeholder={focused ? "Choose a city, or type a street or MLS®#" : ""}
               role="combobox"
               aria-expanded={open}
               aria-controls={`${id}-results`}
               aria-autocomplete="list"
               aria-activedescendant={open && highlight >= 0 ? `${id}-r${highlight}` : undefined}
-              className="w-full min-w-0 bg-transparent py-0.5 text-[15px] font-semibold text-ink placeholder:font-normal placeholder:text-muted focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+              className="w-full min-w-0 bg-transparent py-0.5 pr-6 text-[15px] font-semibold text-ink placeholder:font-normal placeholder:text-muted focus:outline-none [&::-webkit-search-cancel-button]:hidden"
             />
+            {/* Opens the list of locations. */}
+            <button
+              type="button"
+              tabIndex={-1}
+              aria-label="Show locations"
+              onClick={() => {
+                setFocused((f) => !f);
+                document.getElementById(`${id}-q`)?.focus();
+              }}
+              className="absolute inset-y-0 right-0 flex items-center text-muted hover:text-ink"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                aria-hidden="true"
+                className={`transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
             {!focused && filters.q === "" && (
-              <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center truncate text-[15px] text-muted">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 left-0 right-6 flex items-center truncate text-[15px] text-muted"
+              >
                 <span className="motion-reduce:hidden">
                   {hint}
                   <span className="hero-caret ml-px inline-block h-[1.05em] w-[2px] translate-y-[2px] bg-aqua-500" />
@@ -235,7 +332,12 @@ export function SearchPanel({
           <Select id={`${id}-type`} value={filters.type} onChange={(type) => set({ type })} options={typeOptions} />
         </Segment>
         <Segment icon="tag" label="Price range" htmlFor={`${id}-price`} className="md:border-r">
-          <Select id={`${id}-price`} value={filters.price} onChange={(price) => set({ price })} options={PRICE_RANGES} />
+          <Select
+            id={`${id}-price`}
+            value={filters.price}
+            onChange={(price) => set({ price })}
+            options={PRICE_RANGES}
+          />
         </Segment>
         <Segment icon="bed" label="Beds" htmlFor={`${id}-beds`}>
           <Select id={`${id}-beds`} value={filters.beds} onChange={(beds) => set({ beds })} options={BED_OPTIONS} />
@@ -246,7 +348,15 @@ export function SearchPanel({
             type="submit"
             className="flex h-full min-h-13 w-full items-center justify-center gap-2.5 bg-navy-900 px-7 font-extrabold text-on-dark transition-colors hover:bg-aqua-400 hover:text-navy-900"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              aria-hidden="true"
+            >
               <circle cx="11" cy="11" r="7" />
               <path d="M20 20l-4-4" />
             </svg>
@@ -259,42 +369,86 @@ export function SearchPanel({
       <div
         id={`${id}-results`}
         role="listbox"
-        aria-label="Matching listings"
-        className={`absolute left-0 top-full z-30 mt-2 w-full max-w-[560px] origin-top bg-white shadow-[0_28px_60px_-24px_rgba(10,29,40,0.55)] transition-[opacity,transform] duration-300 ease-out ${
+        aria-label="Locations and matching listings"
+        className={`absolute left-0 top-full z-30 mt-2 max-h-[min(70vh,520px)] w-full max-w-[560px] origin-top overflow-y-auto bg-white shadow-[0_28px_60px_-24px_rgba(10,29,40,0.55)] transition-[opacity,transform] duration-300 ease-out ${
           open ? "translate-y-0 scale-y-100 opacity-100" : "pointer-events-none -translate-y-2 scale-y-95 opacity-0"
         }`}
       >
         {open && (
           <>
-            {results.length > 0 ? (
-              <ul className="flex flex-col py-2">
-                {results.map((l, i) => (
-                  <li key={l.key} id={`${id}-r${i}`} role="option" aria-selected={i === highlight}>
-                    <Link
-                      href={l.href}
-                      onMouseEnter={() => setHighlight(i)}
-                      className={`hero-result flex items-center gap-4 px-3 py-2.5 transition-colors ${i === highlight ? "bg-mist-100" : ""}`}
-                      style={{ animationDelay: `${i * 60}ms` }}
-                    >
-                      <span className="relative h-14 w-20 shrink-0 overflow-hidden bg-cloud-300">
-                        {l.src && <Image src={l.src} alt="" fill sizes="80px" unoptimized={isRemote(l.src)} className="object-cover" />}
-                      </span>
-                      <span className="flex min-w-0 flex-col">
-                        <span className="truncate font-bold text-ink">{l.title}</span>
-                        <span className="truncate text-sm text-muted">{l.place}</span>
-                      </span>
-                      <span
-                        className={`ml-auto shrink-0 px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] ${
-                          l.over ? "bg-navy-900 text-aqua-300" : "bg-aqua-100 text-navy-900"
+            {cityOptions.length > 0 && (
+              <div className="py-2">
+                <p className="px-5 pb-1 pt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted">Locations</p>
+                <ul>
+                  {cityOptions.map((c, i) => (
+                    <li key={c.name} id={`${id}-r${i}`} role="option" aria-selected={i === highlight}>
+                      <button
+                        type="button"
+                        onClick={() => pickCity(c.name)}
+                        onMouseEnter={() => setHighlight(i)}
+                        className={`hero-result flex w-full items-center gap-3 px-5 py-2.5 text-left transition-colors ${
+                          i === highlight ? "bg-mist-100" : ""
                         }`}
+                        style={{ animationDelay: `${Math.min(i, 8) * 35}ms` }}
                       >
-                        {l.status}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
+                        <Icon name="pin" />
+                        <span className="font-semibold text-ink">{c.name}</span>
+                        <span className="ml-auto text-sm text-muted">
+                          {c.count > 0 ? `${c.count} listing${c.count === 1 ? "" : "s"}` : "Service area"}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {!q || pickedCity ? null : results.length > 0 ? (
+              <ul className={`flex flex-col py-2 ${cityOptions.length ? "border-t border-cloud-300" : ""}`}>
+                <li
+                  aria-hidden="true"
+                  className="px-5 pb-1 pt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted"
+                >
+                  Homes
+                </li>
+                {results.map((l, n) => {
+                  const i = cityOptions.length + n;
+                  return (
+                    <li key={l.key} id={`${id}-r${i}`} role="option" aria-selected={i === highlight}>
+                      <Link
+                        href={l.href}
+                        onMouseEnter={() => setHighlight(i)}
+                        className={`hero-result flex items-center gap-4 px-3 py-2.5 transition-colors ${i === highlight ? "bg-mist-100" : ""}`}
+                        style={{ animationDelay: `${n * 60}ms` }}
+                      >
+                        <span className="relative h-14 w-20 shrink-0 overflow-hidden bg-cloud-300">
+                          {l.src && (
+                            <Image
+                              src={l.src}
+                              alt=""
+                              fill
+                              sizes="80px"
+                              unoptimized={isRemote(l.src)}
+                              className="object-cover"
+                            />
+                          )}
+                        </span>
+                        <span className="flex min-w-0 flex-col">
+                          <span className="truncate font-bold text-ink">{l.title}</span>
+                          <span className="truncate text-sm text-muted">{l.place}</span>
+                        </span>
+                        <span
+                          className={`ml-auto shrink-0 px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] ${
+                            l.over ? "bg-navy-900 text-aqua-300" : "bg-aqua-100 text-navy-900"
+                          }`}
+                        >
+                          {l.status}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
-            ) : (
+            ) : cityOptions.length === 0 ? (
               <p className="hero-result px-5 py-4 text-sm text-body">
                 No listings match that search right now.{" "}
                 <Link href="/contact" className="font-bold text-aqua-700 underline">
@@ -302,15 +456,17 @@ export function SearchPanel({
                 </Link>
                 .
               </p>
+            ) : null}
+            {q && !pickedCity && (
+              <button
+                type="button"
+                onClick={searchAll}
+                className="flex w-full items-center justify-between border-t border-cloud-300 px-5 py-3.5 text-left text-sm font-extrabold text-aqua-700 hover:bg-mist-100 hover:text-navy-900"
+              >
+                {matching.length > MAX_RESULTS ? `See all ${matching.length} results` : "Open the full search"}
+                <span aria-hidden="true">→</span>
+              </button>
             )}
-            <button
-              type="button"
-              onClick={searchAll}
-              className="flex w-full items-center justify-between border-t border-cloud-300 px-5 py-3.5 text-left text-sm font-extrabold text-aqua-700 hover:bg-mist-100 hover:text-navy-900"
-            >
-              {matching.length > MAX_RESULTS ? `See all ${matching.length} results` : "Open the full search"}
-              <span aria-hidden="true">→</span>
-            </button>
           </>
         )}
       </div>

@@ -106,6 +106,22 @@ export function typeOptions(listings: Pick<Listing, "propertyType">[]) {
   return found.length ? found : DEFAULT_TYPES;
 }
 
+/**
+ * Locations for the Location dropdown: the cities in PK's listings (with how many homes each),
+ * then PK's other service areas, so the menu is useful even before there are many listings.
+ */
+export function locationOptions(listings: Pick<Listing, "city" | "status">[], serviceAreas: readonly string[]) {
+  const counts = new Map<string, number>();
+  for (const l of listings) {
+    if (l.status === "off-market" || !l.city) continue;
+    counts.set(l.city, (counts.get(l.city) ?? 0) + 1);
+  }
+  const withListings = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name, count]) => ({ name, count }));
+  const known = new Set(withListings.map((l) => l.name.toLowerCase()));
+  const others = serviceAreas.filter((a) => !known.has(a.toLowerCase())).map((name) => ({ name, count: 0 }));
+  return [...withListings, ...others];
+}
+
 /** "for sale · Detached · Under $750K · “pickering”" for the results summary. */
 export function describeFilters(f: ListingFilters) {
   return [
