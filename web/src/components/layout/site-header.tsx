@@ -8,7 +8,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-cloud-300 bg-mist-100/95 backdrop-blur">
       <div className="container-site flex items-center justify-between gap-6 py-3.5">
-        <Logo />
+        <Logo showBrokerage={false} />
         <nav aria-label="Main" className="hidden xl:block">
           <ul className="flex gap-7 text-[15px] font-semibold">
             {mainNav.map((item) => (
