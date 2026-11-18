@@ -12,7 +12,8 @@ import { site } from "@/lib/site";
  * Google's rules for showing this data (Places API policies):
  * - credit each review's author (name and photo, linking to their profile),
  * - let visitors open the review on Google Maps,
- * - show "Google Maps" as the source, and say how reviews are ordered (Google returns up to 5, most relevant first),
+ * - show "Google Maps" as the source, and say how reviews are ordered. The Places API returns at most 5 reviews,
+ *   chosen by Google as "most relevant", with no option for newest; the site re-sorts those 5 newest first.
  * - don't store reviews: they are refetched every few hours rather than saved in a database.
  *
  * Billing: requesting reviews uses the "Place Details Enterprise + Atmosphere" SKU
@@ -26,6 +27,8 @@ export type GoogleReview = {
   rating: number;
   text: string;
   relativeTime: string;
+  /** RFC 3339 timestamp, used to sort newest first. */
+  publishTime: string | null;
   reviewUri: string | null;
 };
 
@@ -41,6 +44,7 @@ type ApiReview = {
   text?: { text?: string };
   originalText?: { text?: string };
   relativePublishTimeDescription?: string;
+  publishTime?: string;
   googleMapsUri?: string;
   authorAttribution?: { displayName?: string; uri?: string; photoUri?: string };
 };
@@ -87,9 +91,12 @@ export async function getGoogleReviews(): Promise<GoogleReviews | null> {
           rating: r.rating ?? 0,
           text: (r.text?.text ?? r.originalText?.text ?? "").trim(),
           relativeTime: r.relativePublishTimeDescription ?? "",
+          publishTime: r.publishTime ?? null,
           reviewUri: r.googleMapsUri ?? null,
         }))
-        .filter((r) => r.text.length > 0),
+        .filter((r) => r.text.length > 0)
+        // Newest first. Reviews without a date keep Google's order, after the dated ones.
+        .sort((a, b) => (b.publishTime ?? "").localeCompare(a.publishTime ?? "")),
     };
   } catch (error) {
     console.error("[google-reviews] request failed", error);
