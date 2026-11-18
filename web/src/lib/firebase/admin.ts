@@ -20,8 +20,20 @@ function app() {
   });
 }
 
+let settingsApplied = false;
+
 export function db() {
-  return getFirestore(app());
+  const firestore = getFirestore(app());
+  if (!settingsApplied) {
+    settingsApplied = true;
+    try {
+      // Optional form fields left blank arrive as undefined; skip them instead of rejecting the whole document.
+      firestore.settings({ ignoreUndefinedProperties: true });
+    } catch {
+      // Already configured (settings can only be applied once per instance, e.g. after a dev hot reload).
+    }
+  }
+  return firestore;
 }
 
 /** Cloud Storage bucket for listing photos (FIREBASE_STORAGE_BUCKET, e.g. "my-project.firebasestorage.app"). */
