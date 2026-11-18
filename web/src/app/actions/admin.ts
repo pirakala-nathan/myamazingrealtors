@@ -243,37 +243,100 @@ export async function disconnectGoogle() {
   updateTag(GOOGLE_REVIEWS_TAG);
 }
 
-/** Saves the Instagram reels featured in the homepage "Watch PK" section (in order). */
-export async function saveFeaturedReels(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
-  await requireAdmin();
-  const { MAX_REELS, reelCode, saveReels, REELS_TAG } = await import("@/lib/reels");
-  const links = formData
-    .getAll("reel")
-    .map((v) => String(v).trim())
-    .filter(Boolean);
-  if (links.length > MAX_REELS) return { status: "error", message: `Up to ${MAX_REELS} reels.` };
+// ---------------------------------------------------------------------------
+// Reels for the homepage "Watch PK" section
 
-  const codes: string[] = [];
-  for (const [i, link] of links.entries()) {
-    const code = reelCode(link);
-    if (!code) {
-      return {
-        status: "error",
-        message: `Link ${i + 1} isn’t an Instagram reel or post link. Copy it from Instagram’s Share → Copy link.`,
-      };
+/** Starts uploading a reel video; the browser then sends it in chunks with uploadReelChunk. */
+export async function startReelUpload(contentType: string, size: number): Promise<{ session?: string; url?: string; error?: string }> {
+  await requireAdmin();
+  const { MAX_VIDEO_BYTES, VIDEO_TYPES, startVideoUpload } = await import("@/lib/videos");
+  if (!VIDEO_TYPES.includes(contentType)) return { error: "Use an MP4 or MOV video." };
+  if (size <= 0 || size > MAX_VIDEO_BYTES) return { error: `Videos can be up to ${MAX_VIDEO_BYTES / 1024 / 1024} MB.` };
+  try {
+    return await startVideoUpload(contentType);
+  } catch (error) {
+    console.error("[admin] starting video upload failed", error);
+    return { error: "The video upload couldn’t start. Check the Firebase Storage setup." };
+  }
+}
+
+/** Receives one chunk of a reel video (the form data holds session, start, total and chunk). */
+export async function uploadReelChunk(formData: FormData): Promise<{ done?: boolean; error?: string }> {
+  await requireAdmin();
+  const { CHUNK_BYTES, MAX_VIDEO_BYTES, uploadVideoChunk } = await import("@/lib/videos");
+  const session = String(formData.get("session") ?? "");
+  const start = Number(formData.get("start"));
+  const total = Number(formData.get("total"));
+  const chunk = formData.get("chunk");
+  if (!(chunk instanceof File) || chunk.size === 0 || chunk.size > CHUNK_BYTES) return { error: "Bad chunk." };
+  if (!Number.isInteger(start) || start < 0 || !Number.isInteger(total) || total > MAX_VIDEO_BYTES) return { error: "Bad range." };
+  try {
+    return { done: await uploadVideoChunk(session, start, total, new Uint8Array(await chunk.arrayBuffer())) };
+  } catch (error) {
+    console.error("[admin] video chunk failed", error);
+    return { error: "Part of the video didn’t upload. Please try again." };
+  }
+}
+
+const reelSchema = z
+  .array(
+    z.object({
+      id: z.string().min(1).max(60),
+      video: z
+        .string()
+        .regex(/^(https:\/\/firebasestorage\.googleapis\.com\/|\/uploads\/reels\/)/)
+        .nullable(),
+      poster: z
+        .string()
+        .regex(/^(https:\/\/|\/uploads\/)/)
+        .nullable(),
+      title: z
+        .string()
+        .trim()
+        .max(80)
+        .nullable()
+        .transform((v) => v || null),
+      instagramUrl: z.string().trim().max(300).nullable(),
+    }),
+  )
+  .max(6);
+
+/** Saves the reels list (order, titles, Instagram links, uploaded videos). */
+export async function saveReelList(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  await requireAdmin();
+  const { REELS_TAG, reelCode, reelUrl, saveReels } = await import("@/lib/reels");
+  let parsed;
+  try {
+    parsed = reelSchema.safeParse(JSON.parse(String(formData.get("reels") ?? "[]")));
+  } catch {
+    return { status: "error", message: "Something went wrong reading the list. Please reload the page." };
+  }
+  if (!parsed.success) return { status: "error", message: "Up to 6 reels, each with a valid video." };
+
+  const items = [];
+  for (const [i, r] of parsed.data.entries()) {
+    let instagramUrl: string | null = null;
+    if (r.instagramUrl) {
+      const code = reelCode(r.instagramUrl);
+      if (!code) return { status: "error", message: `Reel ${i + 1}: the Instagram link isn’t a reel or post link.` };
+      instagramUrl = reelUrl(code);
     }
-    if (!codes.includes(code)) codes.push(code);
+    items.push({ ...r, instagramUrl });
   }
 
   try {
-    await saveReels(codes);
+    await saveReels(items);
   } catch (error) {
     console.error("[admin] saving reels failed", error);
     return { status: "error", message: "The reels couldn’t be saved. Please try again." };
   }
   updateTag(REELS_TAG);
+  const live = items.filter((r) => r.video).length;
+  const waiting = items.length - live;
   return {
     status: "success",
-    message: codes.length ? `Saved ${codes.length} reel${codes.length === 1 ? "" : "s"}.` : "Removed all reels.",
+    message:
+      `Saved. ${live} reel${live === 1 ? "" : "s"} on the homepage` +
+      (waiting ? `; ${waiting} still need${waiting === 1 ? "s" : ""} a video.` : "."),
   };
 }

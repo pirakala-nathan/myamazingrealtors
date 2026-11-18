@@ -70,6 +70,10 @@ Without the first two, submissions are still saved and the function log shows "E
 
 Set `GOOGLE_PLACES_API_KEY` (a server-only key restricted to "Places API (New)"). PK's Business Profile place ID is `site.googlePlaceId` in `src/lib/site.ts`; `GOOGLE_PLACE_ID` overrides it. Without the key, the placeholders show. The reviews scroll sideways in a carousel (`src/components/home/review-carousel.tsx`) that advances every few seconds and pauses on hover, focus or touch.
 
+## Reels ("Watch PK")
+
+PK manages up to 6 reels on `/admin`: upload each reel's video file (MP4/MOV up to 150 MB), add a title and optionally the Instagram link. Videos are uploaded in 3 MB pieces through the server to Firebase Storage under `reels/` (`src/lib/videos.ts`), and a still frame is captured in the browser as the preview image. The homepage carousel (`src/components/home/reel-carousel.tsx`) plays the middle reel silently, moves on when it ends, and opens a full-screen player with sound on click. Instagram embeds aren't used because they can't be styled.
+
 ## Opening animation
 
 `src/components/layout/intro.tsx` shows a black screen where the logo's hands form the roof, the windows light up and a loading bar fills, then it fades into the site (about 3 seconds). It plays once per browser session, never on `/admin`, and not for visitors who ask their device for reduced motion. Add `?intro` to any URL to replay it. The timing is in the "Intro" block at the end of `src/app/globals.css`.

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { CONSENT_TEXT, type FormState } from "@/lib/forms";
-import { site } from "@/lib/site";
 
 const control =
   "w-full rounded-none border border-cloud-400 bg-mist-50 px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-navy-900 focus:outline-none focus-visible:outline-2 aria-[invalid=true]:border-red-700";

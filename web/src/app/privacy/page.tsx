@@ -83,12 +83,8 @@ export default function PrivacyPage() {
             photos from Google.
           </p>
           <p>
-            The homepage also shows Instagram reels using Instagram’s official embed. When they load, Instagram (Meta) may
-            set cookies and collect information under{" "}
-            <a href="https://privacycenter.instagram.com/policy" target="_blank" rel="noopener noreferrer">
-              Instagram’s privacy policy
-            </a>
-            .
+            Videos in the “Watch {agent.firstName}” section are hosted with our other files; they are not Instagram embeds.
+            Links to Instagram open Instagram, where Instagram’s own privacy policy applies.
           </p>
 
           <h2>How long we keep it</h2>
@@ -100,7 +96,7 @@ export default function PrivacyPage() {
 
           <h2>Cookies and local storage</h2>
           <p>
-            The site itself doesn’t use tracking cookies (embedded Instagram reels may; see above). It uses your browser’s session storage to remember that you’ve already
+            The site doesn’t use tracking cookies. It uses your browser’s session storage to remember that you’ve already
             seen the opening animation during a visit. The admin area uses a cookie to keep {agent.firstName} signed in;
             visitors never receive it.
           </p>

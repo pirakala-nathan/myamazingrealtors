@@ -9,8 +9,8 @@ import { listingTitle, statusLabel } from "@/lib/listings/types";
 import { site } from "@/lib/site";
 import { AddListingForm, RowActions } from "./listing-controls";
 import { GoogleReviewsPanel } from "./google-panel";
-import { ReelsForm } from "./reels-form";
-import { MAX_REELS, getReelsForAdmin, reelUrl } from "@/lib/reels";
+import { ReelsManager } from "./reels-form";
+import { MAX_REELS, getReelsForAdmin } from "@/lib/reels";
 import { ManualListingForm } from "./manual-listing-form";
 
 export const metadata: Metadata = { title: "Listings" };
@@ -46,12 +46,14 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
       <GoogleReviewsPanel result={typeof googleResult === "string" ? googleResult : undefined} />
 
       <section className="flex flex-col gap-4 border border-cloud-300 bg-mist-50 p-6 md:p-8">
-        <h2 className="font-display text-3xl font-semibold">Instagram reels</h2>
+        <h2 className="font-display text-3xl font-semibold">Reels for “Watch {site.agent.firstName}”</h2>
         <p className="text-body">
-          Up to {MAX_REELS} reels for the “Watch {site.agent.firstName}” section on the homepage, shown in this order. On
-          Instagram, open a reel, tap <strong>Share → Copy link</strong>, and paste it here. The reel must be public.
+          Up to {MAX_REELS} short videos for the homepage, played in the site’s own player, in this order. Upload the
+          video file of each reel (on Instagram: open the reel → ⋯ → <strong>Download</strong>, or use the original from
+          your phone). MP4 or MOV, up to 150 MB; 1080p or 720p vertical is ideal. Add a short title and, if you like, the
+          reel’s Instagram link so viewers can like and comment there. Reels without a video don’t show on the site.
         </p>
-        <ReelsForm initialLinks={reels.map(reelUrl)} max={MAX_REELS} />
+        <ReelsManager initialReels={reels} max={MAX_REELS} />
       </section>
 
       <section className="flex flex-col gap-4 border border-cloud-300 bg-mist-50 p-6 md:p-8">
