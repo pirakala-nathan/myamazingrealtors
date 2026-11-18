@@ -4,20 +4,67 @@ import { site } from "@/lib/site";
 import { insights, services, testimonials } from "@/lib/content/home";
 import { ButtonLink } from "@/components/ui/button-link";
 
+const serviceIcons = {
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-4-4" />
+    </>
+  ),
+  home: (
+    <>
+      <path d="M3 11l9-7 9 7v9H3z" />
+      <path d="M9 20v-6h6v6" />
+    </>
+  ),
+  chart: <path d="M4 19h16M7 16V9M12 16V5M17 16v-4" />,
+};
+
 export function Services() {
   return (
-    <section className="container-site pb-20 pt-6 md:pb-26">
-      <ul className="grid gap-px border border-cloud-300 bg-cloud-300 md:grid-cols-3">
-        {services.map((s) => (
-          <li key={s.eyebrow} className="bg-mist-50">
-            <Link href={s.href} className="group flex h-full flex-col gap-3.5 px-8 py-10">
-              <span className="eyebrow text-xs text-aqua-700">{s.eyebrow}</span>
-              <span className="font-display text-[34px] font-semibold leading-tight">{s.title}</span>
-              <span className="text-[15px] leading-relaxed text-body">{s.body}</span>
-              <span className="mt-auto font-bold group-hover:text-aqua-700">{s.cta} →</span>
-            </Link>
-          </li>
-        ))}
+    <section className="container-site pb-14 pt-20 md:pt-26">
+      <div className="mb-9 flex flex-col justify-between gap-5 md:flex-row md:items-end">
+        <h2 className="font-display text-[clamp(2.5rem,4.6vw,3.5rem)] font-semibold leading-[1.02]">
+          How {site.agent.firstName} can help
+        </h2>
+        <p className="max-w-[420px] text-base leading-relaxed text-body">
+          Buying, selling or just curious what your home is worth. Start where you are.
+        </p>
+      </div>
+      <ul className="grid gap-5 md:grid-cols-3">
+        {services.map((s) => {
+          const highlight = "highlight" in s && s.highlight;
+          return (
+            <li key={s.title}>
+              <Link
+                href={s.href}
+                className={`group flex h-full flex-col gap-3 border px-7 py-8 transition-colors ${
+                  highlight
+                    ? "border-aqua-400 bg-aqua-400 text-navy-900 hover:bg-aqua-300"
+                    : "border-cloud-300 bg-mist-50 hover:border-navy-900"
+                }`}
+              >
+                <svg
+                  width="36"
+                  height="36"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  aria-hidden="true"
+                  className={highlight ? "text-navy-900" : "text-aqua-700"}
+                >
+                  {serviceIcons[s.icon]}
+                </svg>
+                <span className="mt-2 text-[21px] font-extrabold">{s.title}</span>
+                <span className={`text-[15px] leading-relaxed ${highlight ? "text-navy-900" : "text-body"}`}>{s.body}</span>
+                <span className={`mt-auto pt-2 font-extrabold ${highlight ? "" : "text-aqua-700 group-hover:text-navy-900"}`}>
+                  {s.cta} →
+                </span>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

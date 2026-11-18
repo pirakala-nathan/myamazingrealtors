@@ -55,31 +55,37 @@ export const stats = [
   { value: "[#.#]★", label: "Google rating", detail: "From [##] client reviews" },
 ];
 
-export const heroBadge = { value: "[###]+", label: "Families helped home" };
+/** Short stats beside PK's portrait in the hero. */
+export const heroStats = [
+  { value: "[##]+", label: "Years in real estate" },
+  { value: "[###]+", label: "Homes sold" },
+  { value: "[#.#]★", label: "Google rating" },
+];
 
 export const services = [
   {
-    eyebrow: "Selling",
-    title: "Sell for more, with less stress.",
-    body: "Pricing, staging, photography, video and a marketing plan built for your home.",
-    cta: "Get a home valuation",
-    href: "/home-evaluation",
-  },
-  {
-    eyebrow: "Buying",
-    title: "Find the right home first.",
-    body: "Instant alerts, honest advice on value and a strong negotiator on your side.",
+    icon: "search",
+    title: "Buy a home",
+    body: "New listings first, honest advice on value and a strong negotiator on your side.",
     cta: "Start your search",
     href: "/search",
   },
   {
-    eyebrow: "Investing",
-    title: "Build wealth through property.",
-    body: "Cash-flow analysis, rental and multi-unit opportunities, and leasing support.",
-    cta: "Talk investments",
-    href: "/invest",
+    icon: "home",
+    title: "Sell your home",
+    body: "Pricing, staging, photography and video, and a marketing plan built for your home.",
+    cta: "Selling with PK",
+    href: "/sell",
   },
-];
+  {
+    icon: "chart",
+    title: "Free home evaluation",
+    body: "A personal estimate from recent sales near you, with no obligation to list.",
+    cta: "Get my estimate",
+    href: "/home-evaluation",
+    highlight: true,
+  },
+] as const;
 
 export const testimonials = [
   { quote: "[Verified Google review from a seller, in their own words.]", name: "[Client name]", context: "Sold in [City]" },

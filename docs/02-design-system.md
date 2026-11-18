@@ -13,6 +13,16 @@ This is a personal-brand site built around **PK Sithamparanathan**, the only Rea
 
 The look, copy and branding are original. Nothing is copied from that site.
 
+## Homepage layout: Direction C, "Light & Airy" (chosen 2026-11-18)
+
+PK chose this from three directions drawn on the canvas https://claude.ai/artifact/4t9QRv3XhRoqRuUgfvcJQU. It takes general ideas (light background, large serif headline, round portrait, stats column, overlapping strip) from reference screenshots PK supplied, not any one site's design.
+
+1. **Hero:** eyebrow with PK's name, serif headline "Your next move, made simple.", intro, and an "Explore listings" arrow link. PK's portrait sits in a circle with a thin navy ring and a cyan circle behind it. Three stats sit in a column on desktop and a row on phones.
+2. **Contact strip:** navy bar with call/text, the office address, and a cyan "What's my home worth?" block.
+3. **How PK can help:** three cards (buy, sell, free home evaluation). The evaluation card is filled cyan.
+4. **Search every MLS® listing:** search box beside a grid of listing photos.
+5. Then the results band, sold listings, Watch PK, testimonials, insights and the closing call to action.
+
 ## Logo and icons
 
 The official logo was converted to SVG straight from PK's Illustrator files, so these are exact vectors, not traced. `MARs_LogoGlobalColors.ai` (colour), `Logo_Cropped.ai` (white and cyan, for dark backgrounds) and `MARs_LogoNoText.eps` (the mark alone) share the same artwork:
