@@ -1,6 +1,7 @@
 import "server-only";
 import { cert, getApp, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 import { serverEnv } from "@/lib/env";
 
 /**
@@ -21,4 +22,9 @@ function app() {
 
 export function db() {
   return getFirestore(app());
+}
+
+/** Cloud Storage bucket for listing photos (FIREBASE_STORAGE_BUCKET, e.g. "my-project.firebasestorage.app"). */
+export function bucket() {
+  return getStorage(app()).bucket(serverEnv.firebaseStorageBucket);
 }

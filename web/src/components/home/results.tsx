@@ -1,4 +1,8 @@
 import Image from "next/image";
+import Link from "next/link";
+import { getListings } from "@/lib/listings/store";
+import { listingTitle, statusLabel } from "@/lib/listings/types";
+import { factsLine, isRemote } from "@/components/listings/listing-card";
 import { recentSales, stats as baseStats, formatPrice } from "@/lib/content/home";
 import { formatRating, getGoogleReviews } from "@/lib/google-reviews";
 import { ButtonLink } from "@/components/ui/button-link";
@@ -40,38 +44,76 @@ export async function ResultsBand() {
   );
 }
 
-export function RecentSales() {
+type SaleCard = {
+  key: string;
+  href: string | null;
+  title: string;
+  image: string;
+  imageAlt: string;
+  badge: string;
+  line: string;
+};
+
+/** Sold and leased listings PK has added on the admin page; the sample sales in lib/content/home.ts until there are some. */
+async function saleCards(): Promise<SaleCard[]> {
+  const sold = (await getListings())
+    .filter((l) => (l.status === "sold" || l.status === "leased") && l.photos.length > 0)
+    .slice(0, 4);
+  if (sold.length > 0) {
+    return sold.map((l) => ({
+      key: l.mlsNumber,
+      href: `/listings/${l.slug}`,
+      title: l.street ?? l.city,
+      image: l.photos[0],
+      imageAlt: `Front of ${listingTitle(l)}`,
+      badge: l.soldOverAsking ? (l.status === "leased" ? "Leased over asking" : "Sold over asking") : statusLabel[l.status],
+      line: [l.city, factsLine(l)].filter(Boolean).join(" · "),
+    }));
+  }
+  return recentSales.map((sale) => ({
+    key: sale.address,
+    href: null,
+    title: sale.address,
+    image: sale.image,
+    imageAlt: sale.imageAlt,
+    badge: sale.status === "sold-over-asking" ? "Sold over asking" : "Leased over asking",
+    line: `List price ${formatPrice(sale.listPrice)} · ${sale.city}`,
+  }));
+}
+
+export async function RecentSales() {
+  const cards = await saleCards();
   return (
     <section className="container-site pb-14 pt-20 md:pt-26">
       <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <h2 className="font-display text-[clamp(2.5rem,4.6vw,4rem)] font-semibold leading-none">Sold over asking.</h2>
+        <h2 className="font-display text-[clamp(2.5rem,4.6vw,4rem)] font-semibold leading-none">Recently sold.</h2>
         <ButtonLink href="/our-listings" variant="secondary" className="self-start">
           All of PK’s listings
         </ButtonLink>
       </div>
       <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {recentSales.map((sale) => (
-          <li key={sale.address}>
-            <article className="flex flex-col gap-3">
-              <div className="relative aspect-[4/5] overflow-hidden">
+        {cards.map((c) => {
+          const body = (
+            <article className="group flex flex-col gap-3">
+              <div className="relative aspect-[4/5] overflow-hidden bg-cloud-300">
                 <Image
-                  src={sale.image}
-                  alt={sale.imageAlt}
+                  src={c.image}
+                  alt={c.imageAlt}
                   fill
                   sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover transition-transform duration-700 hover:scale-[1.03]"
+                  unoptimized={isRemote(c.image)}
+                  className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                 />
                 <span className="absolute left-3.5 top-3.5 bg-navy-900 px-3 py-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-aqua-400">
-                  {sale.status === "sold-over-asking" ? "Sold over asking" : "Leased over asking"}
+                  {c.badge}
                 </span>
               </div>
-              <h3 className="font-display text-[26px] font-bold">{sale.address}</h3>
-              <p className="text-sm text-muted">
-                List price {formatPrice(sale.listPrice)} · {sale.city}
-              </p>
+              <h3 className="font-display text-[26px] font-bold group-hover:text-aqua-700">{c.title}</h3>
+              <p className="text-sm text-muted">{c.line}</p>
             </article>
-          </li>
-        ))}
+          );
+          return <li key={c.key}>{c.href ? <Link href={c.href}>{body}</Link> : body}</li>;
+        })}
       </ul>
     </section>
   );

@@ -22,6 +22,9 @@ export const serverEnv = {
   get firebaseClientEmail() {
     return required("FIREBASE_CLIENT_EMAIL");
   },
+  get firebaseStorageBucket() {
+    return required("FIREBASE_STORAGE_BUCKET");
+  },
   /** Hosting dashboards store newlines as literal "\n"; turn them back into real ones. */
   get firebasePrivateKey() {
     return required("FIREBASE_PRIVATE_KEY").replace(/\\n/g, "\n");

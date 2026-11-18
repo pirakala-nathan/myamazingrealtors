@@ -24,8 +24,11 @@ export type Listing = {
   photos: string[];
   latitude: number | null;
   longitude: number | null;
-  source: "proptx" | "dev-sample";
-  /** When the listing was last pulled from PropTx (ISO). */
+  /** proptx: pulled by MLS® number. manual: typed in by PK on the admin page. */
+  source: "proptx" | "dev-sample" | "manual";
+  /** Shows a "Sold over asking" badge (set by PK on manual listings). */
+  soldOverAsking?: boolean;
+  /** When the listing was last pulled from PropTx, or last edited by hand (ISO). */
   fetchedAt: string;
   /** When the MLS® record last changed (ISO), if known. */
   modifiedAt: string | null;

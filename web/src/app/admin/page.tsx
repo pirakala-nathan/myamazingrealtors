@@ -6,7 +6,9 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { formatPrice } from "@/lib/content/home";
 import { getListingsForAdmin } from "@/lib/listings/store";
 import { listingTitle, statusLabel } from "@/lib/listings/types";
+import { site } from "@/lib/site";
 import { AddListingForm, RowActions } from "./listing-controls";
+import { ManualListingForm } from "./manual-listing-form";
 
 export const metadata: Metadata = { title: "Listings" };
 
@@ -45,6 +47,15 @@ async function Dashboard() {
         <AddListingForm />
       </section>
 
+      <section className="flex flex-col gap-4 border border-cloud-300 bg-mist-50 p-6 md:p-8">
+        <h2 className="font-display text-3xl font-semibold">Add a listing by hand</h2>
+        <p className="text-body">
+          For recent sales and listings while PropTx isn’t connected. Sold prices are never shown on the site; the list
+          price only shows while a home is for sale.
+        </p>
+        <ManualListingForm cities={site.serviceAreas} />
+      </section>
+
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-3xl font-semibold">On the site ({listings.length})</h2>
         {listings.length === 0 ? (
@@ -62,9 +73,10 @@ async function Dashboard() {
                     {l.status === "active" && l.listPrice ? ` · ${formatPrice(l.listPrice)}` : ""} · {l.photos.length}{" "}
                     photos · updated {new Date(l.fetchedAt).toLocaleDateString("en-CA")}
                     {l.source === "dev-sample" && " · SAMPLE"}
+                    {l.source === "manual" && " · added by hand"}
                   </span>
                 </div>
-                <RowActions mlsNumber={l.mlsNumber} title={listingTitle(l)} />
+                <RowActions mlsNumber={l.mlsNumber} title={listingTitle(l)} manual={l.source === "manual"} />
               </li>
             ))}
           </ul>

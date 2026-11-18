@@ -74,6 +74,14 @@ Set `GOOGLE_PLACES_API_KEY` (a server-only key restricted to "Places API (New)")
 
 `src/components/layout/intro.tsx` shows a black screen where the logo's hands form the roof, the windows light up and a loading bar fills, then it fades into the site (about 3 seconds). It plays once per browser session, never on `/admin`, and not for visitors who ask their device for reduced motion. Add `?intro` to any URL to replay it. The timing is in the "Intro" block at the end of `src/app/globals.css`.
 
+## Admin: listings added by hand
+
+Until PropTx is connected (or for a listing outside the feed), PK can use **Add a listing by hand** on `/admin`: address, city, MLS® number, status, price, details, description and photos.
+- Photos are resized in the browser to 2000px and uploaded one at a time to Firebase Storage under `listings/` (`FIREBASE_STORAGE_BUCKET`, e.g. `my-project.firebasestorage.app`). In local development without Firebase they go to `public/uploads/` (git-ignored). The first photo is the cover.
+- Hand-entered listings show **Edit** instead of Refresh, so PropTx never overwrites them.
+- Sold and leased listings with photos replace the sample sales in the homepage "Recently sold" section (newest 4). The "Sold over asking" badge is a checkbox on the form. Sold prices are never shown.
+- Removing a listing or a photo leaves the photo file in Storage.
+
 ## Admin: adding listings
 
 Go to `/admin` and sign in with `ADMIN_PASSWORD` (PK only; no accounts are stored). Type an MLS® number and the site pulls the price, details and photos from PropTx (`src/lib/listings/proptx.ts`) and publishes it at `/listings/<address-slug>` and on `/our-listings`.

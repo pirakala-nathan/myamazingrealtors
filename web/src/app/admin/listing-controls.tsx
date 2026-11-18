@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useTransition } from "react";
 import { addListing, refreshListing, removeListing, type AdminFormState } from "@/app/actions/admin";
 
@@ -42,14 +43,20 @@ export function AddListingForm() {
   );
 }
 
-export function RowActions({ mlsNumber, title }: { mlsNumber: string; title: string }) {
+export function RowActions({ mlsNumber, title, manual }: { mlsNumber: string; title: string; manual: boolean }) {
   const [pending, start] = useTransition();
   const button = "rounded-none border-[1.5px] border-navy-900 px-4 py-2 text-sm font-bold disabled:opacity-60";
   return (
     <div className="flex gap-2">
-      <button type="button" disabled={pending} className={button} onClick={() => start(() => refreshListing(mlsNumber))}>
-        {pending ? "Working…" : "Refresh"}
-      </button>
+      {manual ? (
+        <Link href={`/admin/edit/${encodeURIComponent(mlsNumber)}`} className={button}>
+          Edit
+        </Link>
+      ) : (
+        <button type="button" disabled={pending} className={button} onClick={() => start(() => refreshListing(mlsNumber))}>
+          {pending ? "Working…" : "Refresh"}
+        </button>
+      )}
       <button
         type="button"
         disabled={pending}

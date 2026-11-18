@@ -49,3 +49,6 @@ next-env.d.ts
 .firebase
 firebase-debug.log
 firestore-debug.log
+
+# photos uploaded on the admin page in local development
+/public/uploads
