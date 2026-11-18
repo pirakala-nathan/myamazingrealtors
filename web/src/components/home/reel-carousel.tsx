@@ -1,11 +1,27 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useDragScroll, usePause } from "./use-pause";
+
+/** iPads and computers get the 1080p version in the full-screen player; phones the lighter one. */
+const LARGE_SCREEN = "(min-width: 768px)";
+const subscribeLargeScreen = (onChange: () => void) => {
+  const query = window.matchMedia(LARGE_SCREEN);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+const useLargeScreen = () =>
+  useSyncExternalStore(
+    subscribeLargeScreen,
+    () => window.matchMedia(LARGE_SCREEN).matches,
+    () => false,
+  );
 
 export type ReelSlide = {
   id: string;
   video: string;
+  /** 1080p copy for the full-screen player on large screens; falls back to `video`. */
+  videoHd: string | null;
   poster: string | null;
   title: string | null;
   instagramUrl: string | null;
@@ -36,6 +52,18 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
   // Where the full-screen player should start (the preview's position), and the player itself.
   const startAt = useRef(0);
   const playerRef = useRef<HTMLVideoElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  // True from shortly before the section scrolls into view, so the previews are buffered by the time they show.
+  const [near, setNear] = useState(false);
+  // The player stays mounted (hidden) and loads the reel the visitor is likely to open next, so expanding
+  // is instant: the playing reel, or one the visitor points at (counted only while the same reel still plays
+  // in the row). `eager` turns on full buffering once they hover, focus or touch a reel.
+  const [hovered, setHovered] = useState<{ index: number; whileActive: number } | null>(null);
+  const [eager, setEager] = useState(false);
+  const warmUp = (i: number) => {
+    setHovered({ index: i, whileActive: active });
+    setEager(true);
+  };
 
   /** Opens the full-screen player, continuing from where the silent preview had reached. */
   const openPlayer = (i: number) => {
@@ -49,14 +77,29 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
     if (player && preview && open === active && player.currentTime < (player.duration || Infinity) - 0.3) {
       preview.currentTime = player.currentTime;
     }
+    player?.pause();
     setOpen(null);
   };
   /** Next or previous reel inside the player starts from the beginning. */
   const switchPlayer = (delta: number) => {
+    if (open === null) return;
+    const i = (open + delta + reels.length) % reels.length;
     startAt.current = 0;
-    setOpen((o) => (o === null ? o : (o + delta + reels.length) % reels.length));
+    setOpen(i);
   };
-  // Latest versions for the keyboard listener below.
+
+  // Opening: if the warmed-up player already has this reel, jump to the preview's moment and play at once;
+  // otherwise its new source loads and onLoadedMetadata does the same.
+  useEffect(() => {
+    const player = playerRef.current;
+    if (open === null || !player) return;
+    closeRef.current?.focus();
+    if (player.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      const t = startAt.current;
+      player.currentTime = t > 0 && t < player.duration - 0.3 ? t : 0;
+      player.play().catch(() => {});
+    }
+  }, [open]);  // Latest versions for the keyboard listener below.
   const closePlayerRef = useRef(closePlayer);
   const switchPlayerRef = useRef(switchPlayer);
   useEffect(() => {
@@ -136,7 +179,21 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
     if (!track) return;
     const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.35 });
     observer.observe(track);
-    return () => observer.disconnect();
+    // Starts loading about a screen before the section arrives; once on, it stays on.
+    const early = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setNear(true);
+          early.disconnect();
+        }
+      },
+      { rootMargin: "100% 0px 100% 0px" },
+    );
+    early.observe(track);
+    return () => {
+      observer.disconnect();
+      early.disconnect();
+    };
   }, []);
 
   const autoplay = inView && !hovering && open === null && !reducedMotion;
@@ -181,7 +238,10 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
 
   const arrow =
     "flex size-12 items-center justify-center border-[1.5px] border-on-dark text-on-dark transition-colors hover:bg-on-dark hover:text-navy-900";
-  const current = open === null ? null : reels[open];
+  const playerIndex = open ?? (hovered && hovered.whileActive === active ? hovered.index : active);
+  const current = reels[playerIndex];
+  const largeScreen = useLargeScreen();
+  const playerSrc = current && largeScreen && current.videoHd ? current.videoHd : current?.video;
 
   return (
     <div
@@ -206,6 +266,10 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
               <button
                 type="button"
                 onClick={() => (isActive ? openPlayer(i) : goTo(i))}
+                // Start loading the full-screen version as soon as the visitor shows interest.
+                onPointerEnter={() => warmUp(i)}
+                onPointerDown={() => warmUp(i)}
+                onFocus={() => warmUp(i)}
                 aria-label={isActive ? `Play ${reel.title ?? `reel ${i + 1}`} with sound` : `Show ${reel.title ?? `reel ${i + 1}`}`}
                 className={`group relative block aspect-[9/16] w-full overflow-hidden bg-navy-950 text-left ${
                   isActive ? "shadow-[0_24px_60px_-20px_rgba(0,178,219,0.55)] outline outline-2 outline-aqua-400" : ""
@@ -220,7 +284,14 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
                   poster={reel.poster ?? undefined}
                   muted
                   playsInline
-                  preload={i === 0 || !reel.poster ? "metadata" : "none"}
+                  // The playing reel and the one after it buffer ahead, so neither stalls when its turn comes.
+                  preload={
+                    near && (i === active || i === (active + 1) % reels.length)
+                      ? "auto"
+                      : i === 0 || !reel.poster
+                        ? "metadata"
+                        : "none"
+                  }
                   onTimeUpdate={(e) => {
                     if (isActive && e.currentTarget.duration) {
                       setProgress({ index: i, value: e.currentTarget.currentTime / e.currentTarget.duration });
@@ -276,27 +347,33 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
       )}
 
       {current && (
+        // Always mounted so the player can load ahead of time; shown only while a reel is open.
         <div
           role="dialog"
           aria-modal="true"
           aria-label={current.title ?? "Reel"}
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/90 p-4"
+          hidden={open === null}
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/90 p-4 [&[hidden]]:hidden"
           onClick={(e) => {
             if (e.target === e.currentTarget) closePlayer();
           }}
         >
           <div className="flex max-h-full w-full max-w-[min(92vw,calc((100dvh-140px)*9/16))] flex-col gap-3">
             <video
-              key={current.id}
               ref={playerRef}
               onLoadedMetadata={(e) => {
+                // A different reel than the warmed-up one was opened: start once it has loaded.
+                if (open === null) return;
                 const v = e.currentTarget;
-                if (startAt.current > 0 && startAt.current < v.duration - 0.3) v.currentTime = startAt.current;
+                const t = startAt.current;
+                v.currentTime = t > 0 && t < v.duration - 0.3 ? t : 0;
+                v.play().catch(() => {});
               }}
-              src={current.video}
+              src={playerSrc}
               poster={current.poster ?? undefined}
+              // "auto" buffers the whole reel; until the visitor shows interest, only its size and first frame.
+              preload={eager ? "auto" : "metadata"}
               controls
-              autoPlay
               playsInline
               className="aspect-[9/16] w-full bg-black"
             />
@@ -304,7 +381,7 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
           </div>
           <button
             type="button"
-            autoFocus
+            ref={closeRef}
             onClick={closePlayer}
             aria-label="Close"
             className="absolute right-4 top-4 flex size-12 items-center justify-center border-[1.5px] border-on-dark text-on-dark hover:bg-on-dark hover:text-navy-900"

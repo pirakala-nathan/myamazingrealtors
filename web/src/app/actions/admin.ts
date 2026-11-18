@@ -286,6 +286,11 @@ const reelSchema = z
         .string()
         .regex(/^(https:\/\/firebasestorage\.googleapis\.com\/|\/uploads\/reels\/)/)
         .nullable(),
+      videoHd: z
+        .string()
+        .regex(/^(https:\/\/firebasestorage\.googleapis\.com\/|\/uploads\/reels\/)/)
+        .nullish()
+        .transform((v) => v ?? null),
       poster: z
         .string()
         .regex(/^(https:\/\/|\/uploads\/)/)
@@ -346,7 +351,7 @@ export async function listUnattachedReelVideos() {
   await requireAdmin();
   const { listStoredVideos } = await import("@/lib/videos");
   const { getReelsForAdmin } = await import("@/lib/reels");
-  const used = new Set((await getReelsForAdmin()).map((r) => r.video?.split("?")[0]));
+  const used = new Set((await getReelsForAdmin()).flatMap((r) => [r.video, r.videoHd].map((u) => u?.split("?")[0])));
   return (await listStoredVideos()).filter((v) => !used.has(v.url.split("?")[0]));
 }
 
@@ -355,7 +360,9 @@ export async function deleteUnattachedReelVideo(path: string): Promise<{ error?:
   await requireAdmin();
   const { deleteStoredVideo } = await import("@/lib/videos");
   const { getReelsForAdmin } = await import("@/lib/reels");
-  const inUse = (await getReelsForAdmin()).some((r) => r.video && decodeURIComponent(r.video).includes(path));
+  const inUse = (await getReelsForAdmin()).some((r) =>
+    [r.video, r.videoHd].some((u) => u && decodeURIComponent(u).includes(path)),
+  );
   if (inUse) return { error: "That video is used by a reel. Remove the reel first." };
   try {
     await deleteStoredVideo(path);

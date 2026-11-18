@@ -15,6 +15,7 @@ import { COMPRESS_ABOVE_BYTES, compressVideo } from "./compress-video";
 export type ReelItem = {
   id: string;
   video: string | null;
+  videoHd?: string | null;
   poster: string | null;
   title: string | null;
   instagramUrl: string | null;
@@ -113,20 +114,14 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
   }
 
   async function runUpload(id: string, original: File) {
-    setProgress((p) => ({ ...p, [id]: "Starting…" }));
-    try {
-      // Big files are shrunk to 720p in the browser first; small ones go up as they are.
-      let file = original;
-      if (original.size > COMPRESS_ABOVE_BYTES) {
-        setProgress((p) => ({ ...p, [id]: "Compressing 0%" }));
-        const smaller = await compressVideo(original, (f) =>
-          setProgress((p) => ({ ...p, [id]: `Compressing ${Math.round(f * 100)}%` })),
-        );
-        if (smaller) file = smaller;
-      }
+    const say = (text: string) => setProgress((p) => ({ ...p, [id]: text }));
+    const percent = (f: number) => `${Math.min(100, Math.round(f * 100))}%`;
+
+    /** Sends a file to storage in chunks and returns its URL. */
+    async function send(file: File, label: string) {
       if (file.size > MAX_UPLOAD_BYTES) {
         throw new Error(
-          "This video is too large and this browser couldn’t compress it. Try again in Chrome or Edge, or export it at 720p.",
+          "This video is too large and this browser couldn’t compress it. Try again in Chrome or Edge, or export it at 1080p.",
         );
       }
       const type = file.type || (file.name.toLowerCase().endsWith(".mov") ? "video/quicktime" : "video/mp4");
@@ -140,19 +135,48 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
         fd.append("chunk", file.slice(start, start + CHUNK_BYTES), "chunk");
         const res = await uploadReelChunk(fd);
         if (res.error) throw new Error(res.error);
-        setProgress((p) => ({ ...p, [id]: `Uploading ${Math.min(100, Math.round(((start + CHUNK_BYTES) / file.size) * 100))}%` }));
+        say(`${label} ${percent((start + CHUNK_BYTES) / file.size)}`);
       }
+      return started.url;
+    }
 
-      setProgress((p) => ({ ...p, [id]: "Making a preview image…" }));
+    say("Starting…");
+    try {
+      // 1. Light version (720p): plays in the homepage row and on phones. Small files go up as they are.
+      let light = original;
+      if (original.size > COMPRESS_ABOVE_BYTES) {
+        say("Making the light version 0%");
+        light = (await compressVideo(original, "light", (f) => say(`Making the light version ${percent(f)}`))) ?? original;
+      }
+      const video = await send(light, "Uploading the light version");
+
+      say("Making a preview image…");
       let poster: string | null = null;
-      const still = await capturePoster(file);
+      const still = await capturePoster(light);
       if (still) {
         const fd = new FormData();
         fd.append("photo", new File([still], "poster.jpg", { type: "image/jpeg" }));
         poster = (await uploadListingPhoto(fd)).url ?? null;
       }
-      // Save right away so a finished upload is never lost.
-      await commit((list) => list.map((x) => (x.id === id ? { ...x, video: started.url!, poster } : x)));
+      // Save right away so a finished upload is never lost; the reel is live from here on.
+      await commit((list) => list.map((x) => (x.id === id ? { ...x, video, videoHd: null, poster } : x)));
+
+      // 2. Full HD version (1080p) for the full-screen player on iPads and computers.
+      //    Not needed when the original was already small enough to use as it is.
+      if (light !== original) {
+        try {
+          say("Making the HD version 0%");
+          const hd = (await compressVideo(original, "hd", (f) => say(`Making the HD version ${percent(f)}`))) ?? original;
+          const videoHd = await send(hd, "Uploading the HD version");
+          await commit((list) => list.map((x) => (x.id === id && x.video === video ? { ...x, videoHd } : x)));
+        } catch (error) {
+          console.warn("[reels] HD version failed", error);
+          setErrors((e) => ({
+            ...e,
+            [id]: "The reel is live, but its HD version didn’t finish, so large screens show the lighter version. Upload the video again to retry.",
+          }));
+        }
+      }
     } catch (error) {
       setErrors((e) => ({ ...e, [id]: error instanceof Error ? error.message : "Upload failed." }));
     } finally {
@@ -197,7 +221,7 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
                       commit((list) => {
                         const slot = list.find((r) => !r.video);
                         return slot
-                          ? list.map((r) => (r.id === slot.id ? { ...r, video: v.url, poster: null } : r))
+                          ? list.map((r) => (r.id === slot.id ? { ...r, video: v.url, videoHd: null, poster: null } : r))
                           : [...list, { id: crypto.randomUUID(), video: v.url, poster: null, title: null, instagramUrl: null }];
                       })
                     }

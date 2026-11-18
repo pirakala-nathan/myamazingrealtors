@@ -72,7 +72,9 @@ Set `GOOGLE_PLACES_API_KEY` (a server-only key restricted to "Places API (New)")
 
 ## Reels ("Watch PK")
 
-PK manages up to 6 reels on `/admin`: upload each reel's video file (any phone video; files over 25 MB are compressed in the browser to 720p H.264 MP4 at about 3 Mbps with Mediabunny, `src/app/admin/compress-video.ts`), add a title and optionally the Instagram link. Videos are uploaded in 3 MB pieces through the server to Firebase Storage under `reels/` (`src/lib/videos.ts`), and a still frame is captured in the browser as the preview image. The homepage carousel (`src/components/home/reel-carousel.tsx`) plays the middle reel silently, moves on when it ends, and opens a full-screen player with sound on click. Instagram embeds aren't used because they can't be styled.
+PK manages up to 6 reels on `/admin`: upload each reel's video file (any phone video), add a title and optionally the Instagram link. Videos are uploaded in 3 MB pieces through the server to Firebase Storage under `reels/` (`src/lib/videos.ts`), and a still frame is captured in the browser as the preview image. Files over 8 MB are saved in two versions, made in the browser with Mediabunny (`src/app/admin/compress-video.ts`): a light 720p copy (about 2 Mbps, `video`) for the homepage row and phones, and a 1080p copy (about 6 Mbps, `videoHd`) for the full-screen player on iPads and computers. Smaller files are used as they are.
+
+The homepage carousel (`src/components/home/reel-carousel.tsx`) plays the first reel in the row silently and moves on when it ends. The playing reel and the next one start buffering about a screen before the section arrives. Clicking opens a full-screen player with sound that continues from the preview's position. The player stays mounted and hidden, and loads the reel being hovered, focused or touched ahead of time, so expanding starts with no wait. Instagram embeds aren't used because they can't be styled.
 
 ## Opening animation
 

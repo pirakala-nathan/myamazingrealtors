@@ -15,6 +15,11 @@ export type Reel = {
   id: string;
   /** Video URL (Firebase Storage, or /uploads/ in local development). Null until uploaded. */
   video: string | null;
+  /**
+   * Full HD (1080p) copy for the full-screen player on iPads and computers, where the lighter `video`
+   * would look soft. Null for reels uploaded before this existed or already small; the player then uses `video`.
+   */
+  videoHd?: string | null;
   /** Still image shown before the video plays. */
   poster: string | null;
   title: string | null;

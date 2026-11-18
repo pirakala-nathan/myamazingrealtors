@@ -97,7 +97,14 @@ export async function WatchSection() {
         </div>
         <div className="mt-6 pb-20 md:mt-8 md:pb-24">
           <ReelCarousel
-            reels={reels.map((r) => ({ id: r.id, video: r.video!, poster: r.poster, title: r.title, instagramUrl: r.instagramUrl }))}
+            reels={reels.map((r) => ({
+              id: r.id,
+              video: r.video!,
+              videoHd: r.videoHd ?? null,
+              poster: r.poster,
+              title: r.title,
+              instagramUrl: r.instagramUrl,
+            }))}
           />
         </div>
       </section>

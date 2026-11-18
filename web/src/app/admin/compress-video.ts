@@ -2,20 +2,31 @@
  * Shrinks a reel in the browser before upload, using Mediabunny (https://mediabunny.dev),
  * which drives the browser's own hardware video encoder (WebCodecs).
  *
- * Output: MP4 (H.264 video + AAC/Opus audio), long edge 1280px (720p vertical), about 3 Mbps.
- * A 60-second phone reel of several hundred MB typically becomes about 20–25 MB.
+ * Each reel is saved in two versions (MP4, H.264 video + AAC/Opus audio):
+ * - "light": 720p, about 2 Mbps. Plays in the homepage row everywhere and full screen on phones,
+ *   where it looks sharp and starts without a wait (a 60-second reel is about 15 MB).
+ * - "hd": 1080p, about 6 Mbps. Plays full screen on iPads and computers so it stays crisp on big screens.
+ * Videos are never enlarged: a 720p original stays 720p.
  *
- * Returns null when the browser can't do it (older browsers, unusual files); the caller then
- * uploads the original if it's within the size limit.
+ * Returns null when the browser can't do it (older browsers, unusual files) or when it wouldn't
+ * make the file smaller; the caller then uses the original.
  */
-const LONG_EDGE = 1280;
-const VIDEO_BITRATE = 3_000_000;
+export const RENDITIONS = {
+  light: { longEdge: 1280, bitrate: 2_000_000 },
+  hd: { longEdge: 1920, bitrate: 6_000_000 },
+} as const;
+export type Rendition = keyof typeof RENDITIONS;
 const AUDIO_BITRATE = 128_000;
 
-/** Files at or under this size that are already small enough skip compression. */
-export const COMPRESS_ABOVE_BYTES = 25 * 1024 * 1024;
+/** Files at or under this size are already light enough to play smoothly and skip compression. */
+export const COMPRESS_ABOVE_BYTES = 8 * 1024 * 1024;
 
-export async function compressVideo(file: File, onProgress: (fraction: number) => void): Promise<File | null> {
+export async function compressVideo(
+  file: File,
+  rendition: Rendition,
+  onProgress: (fraction: number) => void,
+): Promise<File | null> {
+  const { longEdge, bitrate } = RENDITIONS[rendition];
   if (typeof window === "undefined" || !("VideoEncoder" in window)) return null;
   const { ALL_FORMATS, BlobSource, BufferTarget, Conversion, Input, Mp4OutputFormat, Output, canEncodeVideo } = await import(
     "mediabunny"
@@ -35,11 +46,11 @@ export async function compressVideo(file: File, onProgress: (fraction: number) =
       video: async (track) => {
         const width = await track.getDisplayWidth();
         const height = await track.getDisplayHeight();
-        const scale = Math.min(1, LONG_EDGE / Math.max(width, height));
+        const scale = Math.min(1, longEdge / Math.max(width, height));
         return {
           width: Math.round((width * scale) / 2) * 2, // even number of pixels, required by H.264
           codec: "avc",
-          bitrate: VIDEO_BITRATE,
+          bitrate,
           frameRate: 30,
         };
       },

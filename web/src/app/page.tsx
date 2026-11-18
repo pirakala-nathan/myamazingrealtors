@@ -8,11 +8,11 @@ export default function HomePage() {
     <>
       <Hero />
       <ContactStrip />
-      <Services />
-      <SearchSection />
       <ResultsBand />
-      <WatchSection />
       <Testimonials />
+      <Services />
+      <WatchSection />
+      <SearchSection />
       {/* <Insights /> returns once PK publishes articles or market reports (lib/content/home.ts). */}
       <ContactCta />
     </>
