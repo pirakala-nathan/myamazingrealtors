@@ -9,6 +9,8 @@ import { listingTitle, statusLabel } from "@/lib/listings/types";
 import { site } from "@/lib/site";
 import { AddListingForm, RowActions } from "./listing-controls";
 import { GoogleReviewsPanel } from "./google-panel";
+import { ReelsForm } from "./reels-form";
+import { MAX_REELS, getReelsForAdmin, reelUrl } from "@/lib/reels";
 import { ManualListingForm } from "./manual-listing-form";
 
 export const metadata: Metadata = { title: "Listings" };
@@ -17,6 +19,7 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
   await requireAdmin();
   const listings = await getListingsForAdmin();
   const googleResult = (await searchParams).google;
+  const reels = await getReelsForAdmin();
   const usingSample = !process.env.PROPTX_TOKEN;
 
   return (
@@ -41,6 +44,15 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
       )}
 
       <GoogleReviewsPanel result={typeof googleResult === "string" ? googleResult : undefined} />
+
+      <section className="flex flex-col gap-4 border border-cloud-300 bg-mist-50 p-6 md:p-8">
+        <h2 className="font-display text-3xl font-semibold">Instagram reels</h2>
+        <p className="text-body">
+          Up to {MAX_REELS} reels for the “Watch {site.agent.firstName}” section on the homepage, shown in this order. On
+          Instagram, open a reel, tap <strong>Share → Copy link</strong>, and paste it here. The reel must be public.
+        </p>
+        <ReelsForm initialLinks={reels.map(reelUrl)} max={MAX_REELS} />
+      </section>
 
       <section className="flex flex-col gap-4 border border-cloud-300 bg-mist-50 p-6 md:p-8">
         <h2 className="font-display text-3xl font-semibold">Add a listing</h2>

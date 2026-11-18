@@ -40,7 +40,7 @@ export const site = {
   },
 
   social: {
-    instagram: "https://www.instagram.com/myamazingrealtors/",
+    instagram: "https://www.instagram.com/_snathan06/",
     facebook: "https://www.facebook.com/myamazingrealtors",
     youtube: null as string | null,
   },

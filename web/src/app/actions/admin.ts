@@ -242,3 +242,38 @@ export async function disconnectGoogle() {
   await clearConnection();
   updateTag(GOOGLE_REVIEWS_TAG);
 }
+
+/** Saves the Instagram reels featured in the homepage "Watch PK" section (in order). */
+export async function saveFeaturedReels(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  await requireAdmin();
+  const { MAX_REELS, reelCode, saveReels, REELS_TAG } = await import("@/lib/reels");
+  const links = formData
+    .getAll("reel")
+    .map((v) => String(v).trim())
+    .filter(Boolean);
+  if (links.length > MAX_REELS) return { status: "error", message: `Up to ${MAX_REELS} reels.` };
+
+  const codes: string[] = [];
+  for (const [i, link] of links.entries()) {
+    const code = reelCode(link);
+    if (!code) {
+      return {
+        status: "error",
+        message: `Link ${i + 1} isn’t an Instagram reel or post link. Copy it from Instagram’s Share → Copy link.`,
+      };
+    }
+    if (!codes.includes(code)) codes.push(code);
+  }
+
+  try {
+    await saveReels(codes);
+  } catch (error) {
+    console.error("[admin] saving reels failed", error);
+    return { status: "error", message: "The reels couldn’t be saved. Please try again." };
+  }
+  updateTag(REELS_TAG);
+  return {
+    status: "success",
+    message: codes.length ? `Saved ${codes.length} reel${codes.length === 1 ? "" : "s"}.` : "Removed all reels.",
+  };
+}

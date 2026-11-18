@@ -4,6 +4,7 @@ import { site } from "@/lib/site";
 import { insights, services, testimonials } from "@/lib/content/home";
 import { getGoogleReviews } from "@/lib/google-reviews";
 import { ReviewCarousel } from "@/components/home/review-carousel";
+import { getReels } from "@/lib/reels";
 import { ButtonLink } from "@/components/ui/button-link";
 
 const serviceIcons = {
@@ -72,27 +73,72 @@ export function Services() {
   );
 }
 
-export function WatchSection() {
+/** Instagram's official embed for one public reel (no script needed; loads when scrolled near). */
+function ReelEmbed({ code, index }: { code: string; index: number }) {
+  return (
+    <li className="w-[328px] max-w-[86vw] shrink-0 snap-start overflow-hidden bg-white">
+      <iframe
+        src={`https://www.instagram.com/reel/${code}/embed/`}
+        title={`Instagram reel ${index + 1} from ${site.agent.name}`}
+        loading="lazy"
+        allow="encrypted-media; picture-in-picture; fullscreen"
+        referrerPolicy="strict-origin-when-cross-origin"
+        className="block h-[640px] w-full border-0"
+      />
+    </li>
+  );
+}
+
+export async function WatchSection() {
+  const reels = await getReels();
+  const follow = site.social.youtube ? (
+    <ButtonLink href={site.social.youtube} variant="accent" className="self-start">
+      Subscribe on YouTube
+    </ButtonLink>
+  ) : (
+    <ButtonLink href={site.social.instagram} variant="accent" className="self-start">
+      Follow on Instagram
+    </ButtonLink>
+  );
+  const intro = (
+    <>
+      <p className="eyebrow text-aqua-400">Watch {site.agent.firstName}</p>
+      <h2 className="font-display text-[clamp(2.5rem,4.6vw,4rem)] font-semibold leading-none">
+        Home tours &amp; market updates.
+      </h2>
+      <p className="text-[17px] leading-relaxed text-on-dark-muted">
+        Walk through new listings, neighbourhoods and what the numbers mean for you, in under five minutes.
+      </p>
+    </>
+  );
+
+  if (reels.length > 0) {
+    return (
+      <section className="bg-navy-900 text-on-dark">
+        <div className="container-site flex flex-col gap-10 py-20 md:py-24">
+          <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+            <div className="flex max-w-2xl flex-col gap-4.5">{intro}</div>
+            {follow}
+          </div>
+          <ul
+            aria-label={`Instagram reels from ${site.agent.name}`}
+            className="-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-3 [scrollbar-width:thin] md:mx-0 md:px-0"
+          >
+            {reels.map((code, i) => (
+              <ReelEmbed key={code} code={code} index={i} />
+            ))}
+          </ul>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="bg-navy-900 text-on-dark">
       <div className="container-site flex flex-col gap-12 py-20 md:py-24 lg:flex-row lg:items-center">
         <div className="flex flex-col gap-4.5 lg:flex-[1_1_360px]">
-          <p className="eyebrow text-aqua-400">Watch {site.agent.firstName}</p>
-          <h2 className="font-display text-[clamp(2.5rem,4.6vw,4rem)] font-semibold leading-none">
-            Home tours &amp; market updates.
-          </h2>
-          <p className="text-[17px] leading-relaxed text-on-dark-muted">
-            Walk through new listings, neighbourhoods and what the numbers mean for you, in under five minutes.
-          </p>
-          {site.social.youtube ? (
-            <ButtonLink href={site.social.youtube} variant="accent" className="self-start">
-              Subscribe on YouTube
-            </ButtonLink>
-          ) : (
-            <ButtonLink href={site.social.instagram} variant="accent" className="self-start">
-              Follow on Instagram
-            </ButtonLink>
-          )}
+          {intro}
+          {follow}
         </div>
         {/* Placeholder poster until a real video is supplied. */}
         <div className="relative aspect-video lg:flex-[1.4_1_520px]">
