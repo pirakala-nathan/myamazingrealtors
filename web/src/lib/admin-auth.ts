@@ -2,6 +2,7 @@ import "server-only";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 
 /**
  * PK-only admin sign-in: one password (ADMIN_PASSWORD) and a signed, http-only
@@ -55,6 +56,9 @@ export async function isAdmin() {
   if (!value) return false;
   const [expires, signature] = value.split(".");
   if (!expires || !signature || !equal(signature, sign(expires))) return false;
+  // Checking the expiry reads the clock, so it must run at request time, never during prerendering
+  // (with partial prefetching, cookies can be read in a prefetch prerender, where Date.now() is not allowed).
+  await connection();
   return Number(expires) > Date.now() / 1000;
 }
 
