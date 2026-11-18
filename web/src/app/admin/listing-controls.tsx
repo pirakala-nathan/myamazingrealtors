@@ -20,12 +20,12 @@ export function AddListingForm() {
           autoComplete="off"
           autoCapitalize="characters"
           placeholder="E12345678"
-          className="flex-1 border border-stone-400 bg-ivory-50 px-4 py-3 text-base uppercase focus:border-noir-900 focus:outline-none"
+          className="flex-1 border border-cloud-400 bg-mist-50 px-4 py-3 text-base uppercase focus:border-navy-900 focus:outline-none"
         />
         <button
           type="submit"
           disabled={pending}
-          className="min-h-12 rounded-full bg-noir-900 px-8 font-bold text-on-dark hover:bg-noir-700 disabled:opacity-70"
+          className="min-h-12 rounded-full bg-navy-900 px-8 font-bold text-on-dark hover:bg-navy-700 disabled:opacity-70"
         >
           {pending ? "Looking up…" : "Add listing"}
         </button>
@@ -33,7 +33,7 @@ export function AddListingForm() {
       {state.message && (
         <p
           role={state.status === "error" ? "alert" : "status"}
-          className={`text-sm font-semibold ${state.status === "error" ? "text-red-800" : "text-champagne-700"}`}
+          className={`text-sm font-semibold ${state.status === "error" ? "text-red-800" : "text-aqua-700"}`}
         >
           {state.message}
         </p>
@@ -44,7 +44,7 @@ export function AddListingForm() {
 
 export function RowActions({ mlsNumber, title }: { mlsNumber: string; title: string }) {
   const [pending, start] = useTransition();
-  const button = "rounded-full border-[1.5px] border-noir-900 px-4 py-2 text-sm font-bold disabled:opacity-60";
+  const button = "rounded-full border-[1.5px] border-navy-900 px-4 py-2 text-sm font-bold disabled:opacity-60";
   return (
     <div className="flex gap-2">
       <button type="button" disabled={pending} className={button} onClick={() => start(() => refreshListing(mlsNumber))}>

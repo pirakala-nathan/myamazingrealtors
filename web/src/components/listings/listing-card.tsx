@@ -30,7 +30,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
   const sold = listing.status === "sold" || listing.status === "leased";
   return (
     <Link href={`/listings/${listing.slug}`} className="group flex flex-col gap-4">
-      <div className="relative aspect-[4/3] overflow-hidden bg-stone-300">
+      <div className="relative aspect-[4/3] overflow-hidden bg-cloud-300">
         {photo && (
           <Image
             src={photo}
@@ -43,7 +43,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
         )}
         <span
           className={`absolute left-4 top-4 px-3 py-1.5 text-xs font-extrabold uppercase tracking-wider ${
-            sold ? "bg-noir-900 text-champagne-400" : "bg-ivory-50 text-noir-900"
+            sold ? "bg-navy-900 text-aqua-400" : "bg-mist-50 text-navy-900"
           }`}
         >
           {statusLabel[listing.status]}
@@ -51,7 +51,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
       </div>
       <div className="flex flex-col gap-1">
         {price && <span className="font-display text-3xl font-semibold">{price}</span>}
-        <span className="font-bold group-hover:text-champagne-700">{listingTitle(listing)}</span>
+        <span className="font-bold group-hover:text-aqua-700">{listingTitle(listing)}</span>
         <span className="text-sm text-muted">{factsLine(listing)}</span>
       </div>
     </Link>

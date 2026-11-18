@@ -21,7 +21,7 @@ const cities = [...site.serviceAreas, "Other (GTA)"];
 function Legend({ step, children }: { step: string; children: React.ReactNode }) {
   return (
     <legend className="mb-5 flex items-baseline gap-3 font-display text-[28px] font-semibold leading-tight">
-      <span className="text-base font-sans font-extrabold text-champagne-700">{step}</span>
+      <span className="text-base font-sans font-extrabold text-aqua-700">{step}</span>
       {children}
     </legend>
   );

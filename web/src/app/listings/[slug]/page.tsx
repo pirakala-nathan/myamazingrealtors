@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PageProps<"/listings/[slug]">
 function Fact({ label, value }: { label: string; value: string | number | null }) {
   if (value == null || value === "") return null;
   return (
-    <div className="flex flex-col gap-1 border-t border-stone-300 py-4">
+    <div className="flex flex-col gap-1 border-t border-cloud-300 py-4">
       <dt className="eyebrow text-xs text-muted">{label}</dt>
       <dd className="text-lg font-semibold">{value}</dd>
     </div>
@@ -42,10 +42,10 @@ async function ListingDetail({ params }: { params: PageProps<"/listings/[slug]">
   return (
     <article className="flex flex-col gap-10 pb-20 pt-8 md:pb-26">
       <div className="container-site flex flex-col gap-4">
-        <Link href="/our-listings" className="text-sm font-bold text-muted hover:text-champagne-700">
+        <Link href="/our-listings" className="text-sm font-bold text-muted hover:text-aqua-700">
           ← All listings
         </Link>
-        <p className="eyebrow text-champagne-700">
+        <p className="eyebrow text-aqua-700">
           {statusLabel[listing.status]} · {listing.city}
         </p>
         <h1 className="font-display text-[clamp(2.5rem,5.4vw,4.75rem)] font-semibold leading-[0.95]">{title}</h1>
@@ -57,7 +57,7 @@ async function ListingDetail({ params }: { params: PageProps<"/listings/[slug]">
 
       {hero && (
         <div className="container-site grid gap-2 md:grid-cols-[2fr_1fr]">
-          <div className="relative aspect-[4/3] bg-stone-300 md:row-span-2">
+          <div className="relative aspect-[4/3] bg-cloud-300 md:row-span-2">
             <Image
               src={hero}
               alt={`Front of ${title}`}
@@ -69,7 +69,7 @@ async function ListingDetail({ params }: { params: PageProps<"/listings/[slug]">
             />
           </div>
           {rest.slice(0, 2).map((src, i) => (
-            <div key={src} className="relative hidden aspect-[4/3] bg-stone-300 md:block">
+            <div key={src} className="relative hidden aspect-[4/3] bg-cloud-300 md:block">
               <Image
                 src={src}
                 alt={`${title}, photo ${i + 2}`}
@@ -106,7 +106,7 @@ async function ListingDetail({ params }: { params: PageProps<"/listings/[slug]">
               <h2 className="font-display text-3xl font-semibold">Photos</h2>
               <ul className="grid grid-cols-2 gap-2 md:grid-cols-3">
                 {rest.slice(2).map((src, i) => (
-                  <li key={src} className="relative aspect-[4/3] bg-stone-300">
+                  <li key={src} className="relative aspect-[4/3] bg-cloud-300">
                     <Image
                       src={src}
                       alt={`${title}, photo ${i + 4}`}
@@ -122,7 +122,7 @@ async function ListingDetail({ params }: { params: PageProps<"/listings/[slug]">
           )}
         </div>
 
-        <aside className="flex flex-col gap-4 self-start bg-noir-900 p-8 text-on-dark-muted lg:sticky lg:top-28">
+        <aside className="flex flex-col gap-4 self-start bg-navy-900 p-8 text-on-dark-muted lg:sticky lg:top-28">
           <h2 className="font-display text-3xl font-semibold text-on-dark">
             {listing.status === "active" ? "Want to see it?" : "Thinking of selling?"}
           </h2>
@@ -136,7 +136,7 @@ async function ListingDetail({ params }: { params: PageProps<"/listings/[slug]">
           </ButtonLink>
           <a
             href={site.agent.phoneHref}
-            className="inline-flex min-h-12 items-center justify-center rounded-full border-[1.5px] border-on-dark px-6 font-bold text-on-dark hover:bg-on-dark hover:text-noir-900"
+            className="inline-flex min-h-12 items-center justify-center rounded-full border-[1.5px] border-on-dark px-6 font-bold text-on-dark hover:bg-on-dark hover:text-navy-900"
           >
             Call {site.agent.phone}
           </a>

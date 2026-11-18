@@ -23,12 +23,12 @@ export function LoginForm() {
         type="password"
         autoComplete="current-password"
         required
-        className="border border-stone-400 bg-ivory-50 px-4 py-3 text-base focus:border-noir-900 focus:outline-none"
+        className="border border-cloud-400 bg-mist-50 px-4 py-3 text-base focus:border-navy-900 focus:outline-none"
       />
       <button
         type="submit"
         disabled={pending}
-        className="min-h-12 rounded-full bg-noir-900 px-6 font-bold text-on-dark hover:bg-noir-700 disabled:opacity-70"
+        className="min-h-12 rounded-full bg-navy-900 px-6 font-bold text-on-dark hover:bg-navy-700 disabled:opacity-70"
       >
         {pending ? "Signing in…" : "Sign in"}
       </button>

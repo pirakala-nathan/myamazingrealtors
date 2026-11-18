@@ -1,5 +1,5 @@
 // Generates favicons, phone home-screen icons and social images from the brand vectors.
-// Source: public/brand/logo-mark.svg (extracted from MARs_LogoGlobalColors.ai).
+// Source: public/brand/logo-mark.svg (extracted from MARs_LogoGlobalColors.ai; same artwork as MARs_LogoNoText.eps).
 // Run: npm run icons
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import sharp from "sharp";
@@ -59,10 +59,10 @@ const icoImages = await Promise.all(
 );
 await writeFile(path("src/app/favicon.ico"), ico(icoImages));
 
-// Scalable favicon for modern browsers; windows turn ivory in dark browser themes so they stay visible.
+// Scalable favicon for modern browsers; windows turn white in dark browser themes so they stay visible.
 const iconSvg = squareSvg({ size: 64, scale: 0.98 }).replace(
   /<svg([^>]*)>/,
-  `<svg$1><style>@media (prefers-color-scheme: dark){path[fill="#6e6f72"]{fill:#f3ede2}}</style>`,
+  `<svg$1><style>@media (prefers-color-scheme: dark){path[fill="#6e6f72"]{fill:#ffffff}}</style>`,
 );
 await writeFile(path("src/app/icon.svg"), iconSvg);
 

@@ -9,7 +9,7 @@
 >   - `/team` and `/team/[agent-slug]` become **`/about`** (PK's profile page).
 >   - The `agents` table is dropped. The `agent` role is dropped, so leads are visible to `owner` and `admin` only.
 >   - The admin "Team" module is removed.
-> - **Design direction C, "Noir & Champagne",** is a personal-brand homepage inspired by the structure of personal-brand broker sites. The look and copy are original. See `docs/02-design-system.md`.
+> - **Design direction C, "Harbour Navy & Logo Cyan"** (palette switched from noir and champagne on 2026-11-18 to match the logo), is a personal-brand homepage inspired by the structure of personal-brand broker sites. The look and copy are original. See `docs/02-design-system.md`.
 > - **Code layout.** The app lives in `web/`; set Netlify's Base directory to `web`.
 > - **Brokerage.** RE/MAX Community Realty Inc., Brokerage (exact legal spelling to confirm with RECO).
 > - **Smaller scope and simpler stack (2026-11-11).** These replace the Supabase/Vercel architecture, CRM, client accounts and schema described below:

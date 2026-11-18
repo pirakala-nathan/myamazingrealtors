@@ -4,9 +4,9 @@ export function AnnouncementBar() {
   return (
     <Link
       href="/market-reports"
-      className="block bg-noir-900 px-4 py-3 text-center text-sm text-on-dark hover:text-champagne-300"
+      className="block bg-navy-900 px-4 py-3 text-center text-sm text-on-dark hover:text-aqua-300"
     >
-      New: this month’s <strong className="text-champagne-400">Durham Market Report</strong> is out. Get it free →
+      New: this month’s <strong className="text-aqua-400">Durham Market Report</strong> is out. Get it free →
     </Link>
   );
 }

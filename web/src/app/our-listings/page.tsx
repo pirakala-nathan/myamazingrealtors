@@ -22,7 +22,7 @@ export default async function OurListingsPage() {
         eyebrow="Listings"
         title={
           <>
-            {site.agent.firstName}’s listings<span className="text-champagne-700">.</span>
+            {site.agent.firstName}’s listings<span className="text-aqua-700">.</span>
           </>
         }
       >
@@ -39,7 +39,7 @@ export default async function OurListingsPage() {
             ))}
           </ul>
         ) : (
-          <div className="flex flex-col items-start gap-4 border border-stone-300 bg-ivory-50 p-8 md:p-10">
+          <div className="flex flex-col items-start gap-4 border border-cloud-300 bg-mist-50 p-8 md:p-10">
             <h2 className="font-display text-3xl font-semibold">New listings are on the way.</h2>
             <p className="max-w-xl text-body">
               Want to hear about {site.agent.firstName}’s next listing before it hits the market? Get in touch.

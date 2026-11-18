@@ -19,7 +19,7 @@ async function Dashboard() {
     <div className="flex flex-col gap-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
-          <p className="eyebrow text-champagne-700">Admin</p>
+          <p className="eyebrow text-aqua-700">Admin</p>
           <h1 className="font-display text-5xl font-semibold leading-none">Your listings</h1>
         </div>
         <form action={logout}>
@@ -30,13 +30,13 @@ async function Dashboard() {
       </div>
 
       {usingSample && (
-        <p className="border-l-4 border-champagne-500 bg-champagne-100 px-4 py-3 text-sm">
+        <p className="border-l-4 border-aqua-500 bg-aqua-100 px-4 py-3 text-sm">
           <strong>PropTx isn’t connected yet.</strong> In development, adding any MLS® number creates a sample listing so
           you can try the pages. Add <code>PROPTX_TOKEN</code> to pull real listings.
         </p>
       )}
 
-      <section className="flex flex-col gap-4 border border-stone-300 bg-ivory-50 p-6 md:p-8">
+      <section className="flex flex-col gap-4 border border-cloud-300 bg-mist-50 p-6 md:p-8">
         <h2 className="font-display text-3xl font-semibold">Add a listing</h2>
         <p className="text-body">
           Type the MLS® number. Photos, price and details are pulled from PropTx. Adding a number that’s already here
@@ -50,11 +50,11 @@ async function Dashboard() {
         {listings.length === 0 ? (
           <p className="text-muted">No listings yet.</p>
         ) : (
-          <ul className="flex flex-col border-t border-stone-300">
+          <ul className="flex flex-col border-t border-cloud-300">
             {listings.map((l) => (
-              <li key={l.mlsNumber} className="flex flex-col gap-3 border-b border-stone-300 py-4 sm:flex-row sm:items-center">
+              <li key={l.mlsNumber} className="flex flex-col gap-3 border-b border-cloud-300 py-4 sm:flex-row sm:items-center">
                 <div className="flex flex-1 flex-col gap-0.5">
-                  <Link href={`/listings/${l.slug}`} className="font-bold hover:text-champagne-700">
+                  <Link href={`/listings/${l.slug}`} className="font-bold hover:text-aqua-700">
                     {listingTitle(l)}
                   </Link>
                   <span className="text-sm text-muted">

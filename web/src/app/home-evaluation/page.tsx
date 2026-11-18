@@ -25,7 +25,7 @@ export default function HomeEvaluationPage() {
         eyebrow="Free home evaluation"
         title={
           <>
-            What’s your home worth<span className="text-champagne-700">?</span>
+            What’s your home worth<span className="text-aqua-700">?</span>
           </>
         }
       >
@@ -36,16 +36,16 @@ export default function HomeEvaluationPage() {
       </PageHeader>
 
       <section className="container-site grid gap-10 pb-20 md:pb-26 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-16">
-        <div className="border border-stone-300 bg-ivory-50 p-6 sm:p-8 md:p-10">
+        <div className="border border-cloud-300 bg-mist-50 p-6 sm:p-8 md:p-10">
           <HomeEvaluationForm />
         </div>
 
-        <aside className="flex flex-col gap-6 self-start bg-noir-900 p-8 text-on-dark-muted">
+        <aside className="flex flex-col gap-6 self-start bg-navy-900 p-8 text-on-dark-muted">
           <h2 className="font-display text-3xl font-semibold text-on-dark">How it works</h2>
           <ol className="flex flex-col">
             {steps.map((s, i) => (
-              <li key={s.title} className="flex gap-4 border-t border-noir-600 py-5">
-                <span className="font-display text-3xl font-semibold leading-none text-champagne-400">{i + 1}</span>
+              <li key={s.title} className="flex gap-4 border-t border-navy-600 py-5">
+                <span className="font-display text-3xl font-semibold leading-none text-aqua-400">{i + 1}</span>
                 <span className="flex flex-col gap-1">
                   <span className="font-bold text-on-dark">{s.title}</span>
                   <span className="text-[15px] leading-relaxed">{s.body}</span>
@@ -53,7 +53,7 @@ export default function HomeEvaluationPage() {
               </li>
             ))}
           </ol>
-          <p className="border-t border-noir-600 pt-5 text-[13px] leading-relaxed text-on-dark-subtle">
+          <p className="border-t border-navy-600 pt-5 text-[13px] leading-relaxed text-on-dark-subtle">
             This is a market evaluation by a Realtor®, not a formal appraisal.
           </p>
         </aside>

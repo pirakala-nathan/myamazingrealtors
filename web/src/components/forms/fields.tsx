@@ -4,7 +4,7 @@ import { CONSENT_TEXT, type FormState } from "@/lib/forms";
 import { site } from "@/lib/site";
 
 const control =
-  "w-full rounded-none border border-stone-400 bg-ivory-50 px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-noir-900 focus:outline-none focus-visible:outline-2 aria-[invalid=true]:border-red-700";
+  "w-full rounded-none border border-cloud-400 bg-mist-50 px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-navy-900 focus:outline-none focus-visible:outline-2 aria-[invalid=true]:border-red-700";
 
 type FieldProps = {
   name: string;
@@ -21,7 +21,7 @@ function Wrapper({ name, label, state, required, hint, className = "", children 
     <div className={`flex flex-col gap-1.5 ${className}`}>
       <label htmlFor={name} className="text-sm font-bold">
         {label}
-        {required ? <span className="text-champagne-700"> *</span> : <span className="font-medium text-muted"> (optional)</span>}
+        {required ? <span className="text-aqua-700"> *</span> : <span className="font-medium text-muted"> (optional)</span>}
       </label>
       {children}
       {hint && !error && (
@@ -137,7 +137,7 @@ export function ConsentCheckbox({ state }: { state: FormState }) {
         name="marketingConsent"
         defaultChecked={false}
         key={state.status}
-        className="mt-1 size-5 shrink-0 accent-noir-900"
+        className="mt-1 size-5 shrink-0 accent-navy-900"
       />
       <span>{CONSENT_TEXT}</span>
     </label>
@@ -161,7 +161,7 @@ export function SubmitButton({ pending, children }: { pending: boolean; children
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex min-h-13 w-full items-center justify-center rounded-full bg-noir-900 px-8 py-4 text-base font-bold text-on-dark transition-colors hover:bg-noir-700 hover:text-champagne-300 disabled:cursor-wait disabled:opacity-70 sm:w-auto"
+      className="inline-flex min-h-13 w-full items-center justify-center rounded-full bg-navy-900 px-8 py-4 text-base font-bold text-on-dark transition-colors hover:bg-navy-700 hover:text-aqua-300 disabled:cursor-wait disabled:opacity-70 sm:w-auto"
     >
       {pending ? "Sending…" : children}
     </button>
@@ -191,8 +191,8 @@ export function ErrorBanner({ state }: { state: FormState }) {
 
 export function SuccessPanel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div role="status" className="flex flex-col gap-4 border border-stone-300 bg-ivory-50 p-8 md:p-10">
-      <span className="flex size-12 items-center justify-center rounded-full bg-noir-900 text-champagne-400" aria-hidden="true">
+    <div role="status" className="flex flex-col gap-4 border border-cloud-300 bg-mist-50 p-8 md:p-10">
+      <span className="flex size-12 items-center justify-center rounded-full bg-navy-900 text-aqua-400" aria-hidden="true">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M5 12.5l4.5 4.5L19 7" />
         </svg>

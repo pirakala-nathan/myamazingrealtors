@@ -1,35 +1,44 @@
 @import "tailwindcss";
 
 /*
- * My Amazing Realtors — Direction C "Noir & Champagne"
+ * My Amazing Realtors — "Harbour Navy & Logo Cyan"
+ * Colours come from the official logo: cyan #00b2db and grey #6e6f72
+ * (MARs_LogoGlobalColors.ai / Logo_Cropped.ai). Deep navy carries the dark
+ * sections so the cyan reads cleanly, as in the white-on-dark logo.
  * Source of truth for colour, type and shape tokens (see docs/02-design-system.md).
  */
 @theme {
-  /* Colour */
-  --color-noir-950: #0f0d0a;
-  --color-noir-900: #16130f;
-  --color-noir-800: #1e1a15;
-  --color-noir-700: #221d17;
-  --color-noir-600: #3a3229;
-  --color-noir-500: #4a4136;
+  /* Colour: dark surfaces */
+  --color-navy-950: #06141c;
+  --color-navy-900: #0a1d28;
+  --color-navy-800: #10293a;
+  --color-navy-700: #143246;
+  --color-navy-600: #24475e;
+  --color-navy-500: #355a72;
 
-  --color-champagne-100: #f1e8d4;
-  --color-champagne-300: #d8bc82;
-  --color-champagne-400: #c6a15b;
-  --color-champagne-500: #a8833f;
-  --color-champagne-700: #7a5a24;
+  /* Colour: logo cyan. 400 is the exact logo colour; use 700 for text and links on light
+     backgrounds (cyan 400 on white fails contrast). */
+  --color-aqua-100: #d9f3fa;
+  --color-aqua-300: #5fcfeb;
+  --color-aqua-400: #00b2db;
+  --color-aqua-500: #0093b8;
+  --color-aqua-700: #00708f;
 
-  --color-ivory-50: #fbf8f2;
-  --color-ivory-100: #f3ede2;
-  --color-stone-300: #dccfb8;
-  --color-stone-400: #cfc5b3;
+  /* Colour: light surfaces and lines */
+  --color-mist-50: #f8fbfc;
+  --color-mist-100: #eef4f7;
+  --color-cloud-300: #d3dee4;
+  --color-cloud-400: #b9c8d0;
 
-  --color-ink: #16130f;
-  --color-body: #463f36;
-  --color-muted: #625a50;
-  --color-on-dark: #f3ede2;
-  --color-on-dark-muted: #cfc4b1;
-  --color-on-dark-subtle: #b3a894;
+  /* Logo grey, for the logo and decorative details only (4.5:1 on mist-100) */
+  --color-logo-grey: #6e6f72;
+
+  --color-ink: #0a1d28;
+  --color-body: #3d4a52;
+  --color-muted: #5d5e62;
+  --color-on-dark: #eef4f7;
+  --color-on-dark-muted: #c2d1d9;
+  --color-on-dark-subtle: #9fb2bd;
 
   /* Type */
   --font-display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
@@ -48,13 +57,13 @@
   }
 
   body {
-    background: var(--color-ivory-100);
+    background: var(--color-mist-100);
     color: var(--color-ink);
     font-family: var(--font-sans);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-champagne-500);
+    outline: 2px solid var(--color-aqua-500);
     outline-offset: 3px;
   }
 

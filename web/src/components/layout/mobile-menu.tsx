@@ -33,7 +33,7 @@ export function MobileMenu() {
     };
   }, [open]);
 
-  const buttonClass = "flex size-11 items-center justify-center rounded-full border-[1.5px] border-noir-900";
+  const buttonClass = "flex size-11 items-center justify-center rounded-full border-[1.5px] border-navy-900";
 
   return (
     <div className="xl:hidden">
@@ -55,9 +55,9 @@ export function MobileMenu() {
           role="dialog"
           aria-modal="true"
           aria-label="Menu"
-          className="fixed inset-0 z-50 overflow-y-auto bg-ivory-100"
+          className="fixed inset-0 z-50 overflow-y-auto bg-mist-100"
         >
-          <div className="container-site flex items-center justify-between border-b border-stone-300 py-3.5">
+          <div className="container-site flex items-center justify-between border-b border-cloud-300 py-3.5">
             {/* eslint-disable-next-line @next/next/no-img-element -- small inline SVG logo */}
             <img src="/brand/logo-horizontal.svg" alt={site.name} className="h-8 w-auto" />
             <button ref={closeRef} type="button" aria-label="Close menu" onClick={close} className={buttonClass}>
@@ -70,16 +70,16 @@ export function MobileMenu() {
                 key={item.href}
                 href={item.href}
                 onClick={close}
-                className="border-b border-stone-300 py-4 font-display text-3xl font-semibold"
+                className="border-b border-cloud-300 py-4 font-display text-3xl font-semibold"
               >
                 {item.label}
               </Link>
             ))}
             <div className="mt-8 flex flex-col gap-3 pb-10">
-              <Link href="/contact" onClick={close} className="rounded-full bg-noir-900 py-4 text-center font-bold text-on-dark">
+              <Link href="/contact" onClick={close} className="rounded-full bg-navy-900 py-4 text-center font-bold text-on-dark">
                 Book a call with {site.agent.firstName}
               </Link>
-              <a href={site.agent.phoneHref} className="rounded-full border-[1.5px] border-noir-900 py-4 text-center font-bold">
+              <a href={site.agent.phoneHref} className="rounded-full border-[1.5px] border-navy-900 py-4 text-center font-bold">
                 Call {site.agent.phone}
               </a>
             </div>
