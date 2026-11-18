@@ -68,7 +68,7 @@ Without the first two, submissions are still saved and the function log shows "E
 
 `src/lib/google-reviews.ts` pulls PK's Google rating, review count and up to 5 reviews (Google's "most relevant") from the Places API (New), refreshed about every 6 hours. The homepage shows the rating in the hero and results band, and 3 reviews in "What clients say" with the author's name, photo and a link to each review on Google Maps, as Google's policies require. Reviews are never saved to the database.
 
-Set `GOOGLE_PLACES_API_KEY` (a server-only key restricted to "Places API (New)") and `GOOGLE_PLACE_ID` (PK's Business Profile place ID). Without them, the placeholders show.
+Set `GOOGLE_PLACES_API_KEY` (a server-only key restricted to "Places API (New)"). PK's Business Profile place ID is `site.googlePlaceId` in `src/lib/site.ts`; `GOOGLE_PLACE_ID` overrides it. Without the key, the placeholders show. The reviews scroll sideways in a carousel (`src/components/home/review-carousel.tsx`) that advances every few seconds and pauses on hover, focus or touch.
 
 ## Opening animation
 
