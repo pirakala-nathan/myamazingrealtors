@@ -50,7 +50,7 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
         <p className="text-body">
           Up to {MAX_REELS} short videos for the homepage, played in the site’s own player, in this order. Upload the
           video file of each reel (on Instagram: open the reel → ⋯ → <strong>Download</strong>, or use the original from
-          your phone). MP4 or MOV, up to 150 MB; 1080p or 720p vertical is ideal. Add a short title and, if you like, the
+          your phone). Any phone video works: large files are compressed automatically to 720p before uploading. Add a short title and, if you like, the
           reel’s Instagram link so viewers can like and comment there. Reels without a video don’t show on the site.
         </p>
         <ReelsManager initialReels={reels} max={MAX_REELS} />

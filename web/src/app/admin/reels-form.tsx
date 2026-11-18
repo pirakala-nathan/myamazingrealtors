@@ -8,6 +8,7 @@ import {
   uploadReelChunk,
   type AdminFormState,
 } from "@/app/actions/admin";
+import { COMPRESS_ABOVE_BYTES, compressVideo } from "./compress-video";
 
 export type ReelItem = {
   id: string;
@@ -19,6 +20,7 @@ export type ReelItem = {
 
 const initial: AdminFormState = { status: "idle" };
 const CHUNK_BYTES = 3 * 1024 * 1024; // matches lib/videos.ts
+const MAX_UPLOAD_BYTES = 150 * 1024 * 1024; // matches lib/videos.ts
 const input =
   "w-full rounded-none border border-cloud-400 bg-white px-3 py-2.5 text-[15px] text-ink focus:border-navy-900 focus:outline-none";
 const small = "min-w-9 border border-navy-900 px-2 py-1.5 text-sm font-bold disabled:opacity-30";
@@ -68,11 +70,25 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
       return next;
     });
 
-  async function uploadVideo(id: string, file: File) {
+  async function uploadVideo(id: string, original: File) {
     setErrors((e) => ({ ...e, [id]: "" }));
-    const type = file.type || (file.name.toLowerCase().endsWith(".mov") ? "video/quicktime" : "video/mp4");
     setProgress((p) => ({ ...p, [id]: "Starting…" }));
     try {
+      // Big files are shrunk to 720p in the browser first; small ones go up as they are.
+      let file = original;
+      if (original.size > COMPRESS_ABOVE_BYTES) {
+        setProgress((p) => ({ ...p, [id]: "Compressing 0%" }));
+        const smaller = await compressVideo(original, (f) =>
+          setProgress((p) => ({ ...p, [id]: `Compressing ${Math.round(f * 100)}%` })),
+        );
+        if (smaller) file = smaller;
+      }
+      if (file.size > MAX_UPLOAD_BYTES) {
+        throw new Error(
+          "This video is too large and this browser couldn’t compress it. Try again in Chrome or Edge, or export it at 720p.",
+        );
+      }
+      const type = file.type || (file.name.toLowerCase().endsWith(".mov") ? "video/quicktime" : "video/mp4");
       const started = await startReelUpload(type, file.size);
       if (!started.session || !started.url) throw new Error(started.error ?? "Upload couldn’t start.");
       for (let start = 0; start < file.size; start += CHUNK_BYTES) {
@@ -157,7 +173,7 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
                 {progress[reel.id] ?? (reel.video ? "Replace video" : "Upload video")}
                 <input
                   type="file"
-                  accept="video/mp4,video/quicktime,video/webm"
+                  accept="video/*"
                   className="sr-only"
                   disabled={Boolean(progress[reel.id])}
                   onChange={(e) => {

@@ -72,7 +72,7 @@ Set `GOOGLE_PLACES_API_KEY` (a server-only key restricted to "Places API (New)")
 
 ## Reels ("Watch PK")
 
-PK manages up to 6 reels on `/admin`: upload each reel's video file (MP4/MOV up to 150 MB), add a title and optionally the Instagram link. Videos are uploaded in 3 MB pieces through the server to Firebase Storage under `reels/` (`src/lib/videos.ts`), and a still frame is captured in the browser as the preview image. The homepage carousel (`src/components/home/reel-carousel.tsx`) plays the middle reel silently, moves on when it ends, and opens a full-screen player with sound on click. Instagram embeds aren't used because they can't be styled.
+PK manages up to 6 reels on `/admin`: upload each reel's video file (any phone video; files over 25 MB are compressed in the browser to 720p H.264 MP4 at about 3 Mbps with Mediabunny, `src/app/admin/compress-video.ts`), add a title and optionally the Instagram link. Videos are uploaded in 3 MB pieces through the server to Firebase Storage under `reels/` (`src/lib/videos.ts`), and a still frame is captured in the browser as the preview image. The homepage carousel (`src/components/home/reel-carousel.tsx`) plays the middle reel silently, moves on when it ends, and opens a full-screen player with sound on click. Instagram embeds aren't used because they can't be styled.
 
 ## Opening animation
 
