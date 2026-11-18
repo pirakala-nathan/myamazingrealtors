@@ -271,3 +271,14 @@
     animation: none;
   }
 }
+
+/* Google reviews carousel: the bar along the highlighted review fills, then the row moves on. */
+.review-progress {
+  transform: scaleX(0);
+  animation-name: review-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes review-progress {
+  to { transform: scaleX(1); }
+}

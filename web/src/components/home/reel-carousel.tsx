@@ -13,16 +13,16 @@ export type ReelSlide = {
 const FALLBACK_ADVANCE_MS = 15_000; // if a video can't play, move on anyway
 
 /**
- * "Watch PK" reels: a centred, gliding carousel. The middle reel plays silently and the
- * carousel moves on when it finishes; the others wait, slightly smaller and dimmed.
- * Clicking the middle reel opens a full-screen player with sound.
+ * "Watch PK" reels: a row lined up with the heading. The first reel in the row plays silently and the
+ * row glides to the next when it finishes; the others wait, dimmed.
+ * Clicking the playing reel opens a full-screen player with sound.
  * Pauses on hover, focus or touch and when the tab is hidden; no auto-play for reduced motion.
  */
 export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
   const trackRef = useRef<HTMLUListElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const [active, setActive] = useState(0);
-  // Playback progress of the middle reel, tagged with its index so a new reel starts at 0.
+  // Playback progress of the playing reel, tagged with its index so a new reel starts at 0.
   const [progress, setProgress] = useState({ index: 0, value: 0 });
   const [inView, setInView] = useState(false);
   const [hovering, setHovering] = useState(false);
@@ -32,46 +32,68 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
   );
   const [open, setOpen] = useState<number | null>(null);
 
+  // True while the carousel is scrolling itself, so the scroll listener doesn't fight it.
+  const autoScrolling = useRef(false);
+  const autoScrollTimer = useRef(0);
+
+  /** Brings reel `index` to the start of the row (lined up with the heading) and makes it the playing one. */
   const goTo = useCallback(
     (index: number) => {
       const track = trackRef.current;
       const i = (index + reels.length) % reels.length;
       const card = track?.children[i] as HTMLElement | undefined;
       if (!track || !card) return;
-      track.scrollTo({ left: card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2, behavior: "smooth" });
+      const start = parseFloat(getComputedStyle(track).paddingLeft) || 0;
+      autoScrolling.current = true;
+      window.clearTimeout(autoScrollTimer.current);
+      // Cleared by the browser's scrollend event; this is only a backup for browsers without it.
+      autoScrollTimer.current = window.setTimeout(() => (autoScrolling.current = false), 1500);
+      setActive(i);
+      track.scrollTo({ left: card.offsetLeft - start, behavior: "smooth" });
     },
     [reels.length],
   );
   const next = useCallback(() => goTo(active + 1), [active, goTo]);
 
-  // Which reel is in the middle.
+  // When the visitor swipes or scrolls, the reel at the start of the row becomes the playing one.
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
     let frame = 0;
     const update = () => {
+      if (autoScrolling.current) return;
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const centre = track.scrollLeft + track.clientWidth / 2;
+        const start = track.scrollLeft + (parseFloat(getComputedStyle(track).paddingLeft) || 0);
+        const atEnd = track.scrollLeft >= track.scrollWidth - track.clientWidth - 4;
         let best = 0;
         let bestDistance = Infinity;
         Array.from(track.children).forEach((child, i) => {
-          const el = child as HTMLElement;
-          const distance = Math.abs(el.offsetLeft + el.offsetWidth / 2 - centre);
+          const distance = Math.abs((child as HTMLElement).offsetLeft - start);
           if (distance < bestDistance) {
             bestDistance = distance;
             best = i;
           }
         });
-        setActive(best);
+        // At the far end the last reels can't reach the start of the row; keep the one already playing if visible.
+        setActive((current) => {
+          if (!atEnd) return best;
+          const el = track.children[current] as HTMLElement | undefined;
+          const visible = el && el.offsetLeft >= track.scrollLeft && el.offsetLeft + el.offsetWidth <= track.scrollLeft + track.clientWidth;
+          return visible && current >= best ? current : best;
+        });
       });
     };
-    update();
+    const scrollEnded = () => {
+      autoScrolling.current = false;
+    };
     track.addEventListener("scroll", update, { passive: true });
+    track.addEventListener("scrollend", scrollEnded);
     window.addEventListener("resize", update);
     return () => {
       cancelAnimationFrame(frame);
       track.removeEventListener("scroll", update);
+      track.removeEventListener("scrollend", scrollEnded);
       window.removeEventListener("resize", update);
     };
   }, []);
@@ -87,7 +109,7 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
 
   const autoplay = inView && !hovering && open === null && !reducedMotion;
 
-  // Play the middle reel (muted), pause the rest.
+  // Play the active reel (muted), pause the rest.
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
@@ -139,16 +161,17 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
       <ul
         ref={trackRef}
         aria-label="Reels"
-        className="flex snap-x snap-mandatory gap-4 overflow-x-auto py-4 [-ms-overflow-style:none] [scrollbar-width:none] md:gap-6 [&::-webkit-scrollbar]:hidden"
-        style={{ paddingInline: "calc(50% - min(36vw, 135px))" }}
+        // Side padding lines the first reel up with the heading above (same as .container-site).
+        className="flex snap-x snap-mandatory scroll-pl-4 gap-4 overflow-x-auto px-4 py-4 [-ms-overflow-style:none] [scrollbar-width:none] md:scroll-pl-6 md:gap-5 md:px-6 xl:scroll-pl-[calc((100%-80rem)/2+1.5rem)] xl:px-[calc((100%-80rem)/2+1.5rem)] [&::-webkit-scrollbar]:hidden"
       >
         {reels.map((reel, i) => {
           const isActive = i === active;
           return (
             <li
               key={reel.id}
-              className={`w-[min(72vw,270px)] shrink-0 snap-center transition-all duration-500 ease-out ${
-                isActive ? "scale-100 opacity-100" : "scale-[0.86] opacity-55"
+              // Phone: one reel plus a peek of the next. iPad: about three. Desktop: four to five.
+              className={`w-[min(68vw,280px)] shrink-0 snap-start transition-opacity duration-500 ease-out sm:w-[240px] lg:w-[260px] ${
+                isActive ? "opacity-100" : "opacity-60 hover:opacity-90"
               }`}
             >
               <button
@@ -202,22 +225,24 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
       </ul>
 
       {reels.length > 1 && (
-        <div className="mt-4 flex items-center justify-center gap-4">
-          <button type="button" className={arrow} onClick={() => goTo(active - 1)} aria-label="Previous reel">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M19 12H5M11 6l-6 6 6 6" />
-            </svg>
-          </button>
+        <div className="container-site mt-4 flex items-center justify-between gap-4">
           <div className="flex gap-2" aria-hidden="true">
             {reels.map((r, i) => (
               <span key={r.id} className={`h-[3px] transition-all duration-500 ${i === active ? "w-10 bg-aqua-400" : "w-4 bg-navy-500"}`} />
             ))}
           </div>
-          <button type="button" className={arrow} onClick={() => goTo(active + 1)} aria-label="Next reel">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          </button>
+          <div className="flex gap-2">
+            <button type="button" className={arrow} onClick={() => goTo(active - 1)} aria-label="Previous reel">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M19 12H5M11 6l-6 6 6 6" />
+              </svg>
+            </button>
+            <button type="button" className={arrow} onClick={() => goTo(active + 1)} aria-label="Next reel">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </button>
+          </div>
         </div>
       )}
 

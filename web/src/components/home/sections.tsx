@@ -92,10 +92,10 @@ export async function WatchSection() {
   if (reels.length > 0) {
     return (
       <section className="overflow-hidden bg-navy-900 text-on-dark">
-        <div className="container-site flex flex-col gap-8 py-20 md:py-24">
+        <div className="container-site pt-20 md:pt-24">
           <div className="flex max-w-2xl flex-col gap-4.5">{intro}</div>
         </div>
-        <div className="-mt-12 pb-20 md:-mt-14 md:pb-24">
+        <div className="mt-6 pb-20 md:mt-8 md:pb-24">
           <ReelCarousel
             reels={reels.map((r) => ({ id: r.id, video: r.video!, poster: r.poster, title: r.title, instagramUrl: r.instagramUrl }))}
           />
