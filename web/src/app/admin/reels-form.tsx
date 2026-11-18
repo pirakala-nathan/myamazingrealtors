@@ -1,7 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  deleteUnattachedReelVideo,
+  listUnattachedReelVideos,
   saveReelList,
   startReelUpload,
   uploadListingPhoto,
@@ -57,8 +59,42 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
   const [reels, setReels] = useState<ReelItem[]>(initialReels);
   const [progress, setProgress] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [state, action, pending] = useActionState(saveReelList, initial);
+  const [state, setState] = useState<AdminFormState>(initial);
+  const [pending, setPending] = useState(false);
+  const [unattached, setUnattached] = useState<{ url: string; path: string; size: number; createdAt: string }[]>([]);
   const uploading = Object.keys(progress).length > 0;
+
+  // The latest list, for saving from inside async uploads.
+  const reelsRef = useRef(reels);
+  useEffect(() => {
+    reelsRef.current = reels;
+  }, [reels]);
+  // Uploads run one at a time: compressing several videos at once can freeze a computer.
+  const queueRef = useRef<Promise<void>>(Promise.resolve());
+
+  /** Applies a change to the list and saves it straight away. */
+  async function commit(change: (list: ReelItem[]) => ReelItem[]) {
+    const next = change(reelsRef.current);
+    reelsRef.current = next;
+    setReels(next);
+    await saveNow(next);
+  }
+
+  async function saveNow(list: ReelItem[]) {
+    setPending(true);
+    const fd = new FormData();
+    fd.append("reels", JSON.stringify(list));
+    setState(await saveReelList(initial, fd));
+    setPending(false);
+    refreshUnattached();
+  }
+
+  function refreshUnattached() {
+    listUnattachedReelVideos()
+      .then(setUnattached)
+      .catch(() => {});
+  }
+  useEffect(refreshUnattached, []);
 
   const update = (id: string, patch: Partial<ReelItem>) => setReels((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   const move = (from: number, to: number) =>
@@ -70,8 +106,13 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
       return next;
     });
 
-  async function uploadVideo(id: string, original: File) {
+  function uploadVideo(id: string, original: File) {
     setErrors((e) => ({ ...e, [id]: "" }));
+    setProgress((p) => ({ ...p, [id]: "Waiting…" }));
+    queueRef.current = queueRef.current.then(() => runUpload(id, original));
+  }
+
+  async function runUpload(id: string, original: File) {
     setProgress((p) => ({ ...p, [id]: "Starting…" }));
     try {
       // Big files are shrunk to 720p in the browser first; small ones go up as they are.
@@ -110,7 +151,8 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
         fd.append("photo", new File([still], "poster.jpg", { type: "image/jpeg" }));
         poster = (await uploadListingPhoto(fd)).url ?? null;
       }
-      update(id, { video: started.url, poster });
+      // Save right away so a finished upload is never lost.
+      await commit((list) => list.map((x) => (x.id === id ? { ...x, video: started.url!, poster } : x)));
     } catch (error) {
       setErrors((e) => ({ ...e, [id]: error instanceof Error ? error.message : "Upload failed." }));
     } finally {
@@ -123,8 +165,64 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
   }
 
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        saveNow(reels);
+      }}
+      className="flex flex-col gap-4"
+    >
       <input type="hidden" name="reels" value={JSON.stringify(reels)} />
+
+      {unattached.length > 0 && (
+        <div className="flex flex-col gap-3 border-l-4 border-aqua-500 bg-aqua-100 p-4">
+          <p className="text-sm">
+            <strong>Uploaded videos not attached to a reel ({unattached.length}).</strong> These finished uploading but
+            weren’t saved to a reel. Add them below, or delete the ones you don’t need.
+          </p>
+          <ul className="flex flex-wrap gap-3">
+            {unattached.map((v) => {
+              const empty = reels.find((r) => !r.video);
+              return (
+                <li key={v.path} className="flex w-36 flex-col gap-1.5 bg-white p-2">
+                  <video src={`${v.url}#t=0.5`} preload="metadata" muted playsInline className="aspect-[9/16] w-full bg-navy-900 object-cover" />
+                  <span className="text-[11px] text-muted">
+                    {(v.size / 1024 / 1024).toFixed(1)} MB · {new Date(v.createdAt).toLocaleDateString("en-CA")}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={pending || (!empty && reels.length >= max)}
+                    className="border border-navy-900 px-2 py-1 text-xs font-bold disabled:opacity-40"
+                    onClick={() =>
+                      commit((list) => {
+                        const slot = list.find((r) => !r.video);
+                        return slot
+                          ? list.map((r) => (r.id === slot.id ? { ...r, video: v.url, poster: null } : r))
+                          : [...list, { id: crypto.randomUUID(), video: v.url, poster: null, title: null, instagramUrl: null }];
+                      })
+                    }
+                  >
+                    {empty ? `Add to reel ${reels.indexOf(empty) + 1}` : "Add as a new reel"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={pending}
+                    className="border border-red-800 px-2 py-1 text-xs font-bold text-red-800 disabled:opacity-40"
+                    onClick={async () => {
+                      if (!confirm("Delete this video from storage permanently? This can’t be undone.")) return;
+                      const res = await deleteUnattachedReelVideo(v.path);
+                      if (res.error) alert(res.error);
+                      refreshUnattached();
+                    }}
+                  >
+                    Delete
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {reels.length === 0 && <p className="text-muted">No reels yet.</p>}
       <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -135,9 +233,11 @@ export function ReelsManager({ initialReels, max }: { initialReels: ReelItem[]; 
                 // Admin preview of the uploaded reel's still frame.
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={reel.poster} alt="" className="size-full object-cover" />
+              ) : reel.video ? (
+                <video src={`${reel.video}#t=0.5`} preload="metadata" muted playsInline className="size-full object-cover" />
               ) : (
                 <span className="flex size-full items-center justify-center p-2 text-center text-[11px] font-bold text-on-dark-subtle">
-                  {reel.video ? "Video ready" : "No video yet"}
+                  No video yet
                 </span>
               )}
               <span className="absolute left-1 top-1 bg-navy-900 px-1.5 py-0.5 text-[11px] font-extrabold text-aqua-400">{i + 1}</span>

@@ -163,11 +163,12 @@ export function ReelCarousel({ reels, igProfile }: { reels: ReelSlide[]; igProfi
                   ref={(el) => {
                     videoRefs.current[i] = el;
                   }}
-                  src={reel.video}
+                  // Without a preview image, load the first frame so the card isn't blank.
+                  src={reel.poster ? reel.video : `${reel.video}#t=0.5`}
                   poster={reel.poster ?? undefined}
                   muted
                   playsInline
-                  preload={i === 0 ? "metadata" : "none"}
+                  preload={i === 0 || !reel.poster ? "metadata" : "none"}
                   onTimeUpdate={(e) => {
                     if (isActive && e.currentTarget.duration) {
                       setProgress({ index: i, value: e.currentTarget.currentTime / e.currentTarget.duration });

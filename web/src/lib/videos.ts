@@ -69,3 +69,54 @@ export async function uploadVideoChunk(session: string, start: number, total: nu
   if (res.ok) return true;
   throw new Error(`Cloud Storage responded ${res.status}: ${(await res.text()).slice(0, 200)}`);
 }
+
+export type StoredVideo = { url: string; path: string; size: number; createdAt: string };
+
+/** Every reel video in storage, newest first (used to recover uploads that were never attached to a reel). */
+export async function listStoredVideos(): Promise<StoredVideo[]> {
+  if (firebaseConfigured()) {
+    const { bucket } = await import("@/lib/firebase/admin");
+    const b = bucket();
+    const [files] = await b.getFiles({ prefix: "reels/" });
+    return files
+      .filter((f) => !f.name.endsWith("/"))
+      .map((f) => {
+        const token = String(f.metadata.metadata?.firebaseStorageDownloadTokens ?? "").split(",")[0];
+        return {
+          path: f.name,
+          size: Number(f.metadata.size ?? 0),
+          createdAt: String(f.metadata.timeCreated ?? ""),
+          url: `https://firebasestorage.googleapis.com/v0/b/${b.name}/o/${encodeURIComponent(f.name)}?alt=media${token ? `&token=${token}` : ""}`,
+        };
+      })
+      .filter((v) => v.size > 0)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+  if (process.env.NODE_ENV === "production") return [];
+  const { readdir, stat } = await import("node:fs/promises");
+  const dir = `${process.cwd()}/public/uploads/reels`;
+  try {
+    const names = await readdir(dir);
+    const items = await Promise.all(
+      names.map(async (name) => {
+        const s = await stat(`${dir}/${name}`);
+        return { path: `reels/${name}`, size: s.size, createdAt: s.mtime.toISOString(), url: `/uploads/reels/${name}` };
+      }),
+    );
+    return items.filter((v) => v.size > 0).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  } catch {
+    return [];
+  }
+}
+
+/** Permanently deletes one stored reel video (only paths under reels/). */
+export async function deleteStoredVideo(path: string) {
+  if (!/^reels\/[0-9a-f-]{36}\.(mp4|mov|webm)$/.test(path)) throw new Error("Invalid video path");
+  if (firebaseConfigured()) {
+    const { bucket } = await import("@/lib/firebase/admin");
+    await bucket().file(path).delete({ ignoreNotFound: true });
+    return;
+  }
+  const { rm } = await import("node:fs/promises");
+  await rm(`${process.cwd()}/public/uploads/${path}`, { force: true });
+}

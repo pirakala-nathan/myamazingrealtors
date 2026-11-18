@@ -340,3 +340,28 @@ export async function saveReelList(_prev: AdminFormState, formData: FormData): P
       (waiting ? `; ${waiting} still need${waiting === 1 ? "s" : ""} a video.` : "."),
   };
 }
+
+/** Reel videos in storage that no saved reel uses (e.g. an upload finished but the list wasn't saved). */
+export async function listUnattachedReelVideos() {
+  await requireAdmin();
+  const { listStoredVideos } = await import("@/lib/videos");
+  const { getReelsForAdmin } = await import("@/lib/reels");
+  const used = new Set((await getReelsForAdmin()).map((r) => r.video?.split("?")[0]));
+  return (await listStoredVideos()).filter((v) => !used.has(v.url.split("?")[0]));
+}
+
+/** Permanently deletes an unattached reel video from storage. */
+export async function deleteUnattachedReelVideo(path: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  const { deleteStoredVideo } = await import("@/lib/videos");
+  const { getReelsForAdmin } = await import("@/lib/reels");
+  const inUse = (await getReelsForAdmin()).some((r) => r.video && decodeURIComponent(r.video).includes(path));
+  if (inUse) return { error: "That video is used by a reel. Remove the reel first." };
+  try {
+    await deleteStoredVideo(path);
+    return {};
+  } catch (error) {
+    console.error("[admin] deleting video failed", error);
+    return { error: "The video couldn’t be deleted." };
+  }
+}
