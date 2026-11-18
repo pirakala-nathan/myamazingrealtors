@@ -109,7 +109,6 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
    */
   const hdRef = useRef<HTMLVideoElement>(null);
   const [hdReady, setHdReady] = useState<string | null>(null);
-  const upgrading = useRef<string | null>(null);
   /** Whichever player is showing. */
   const showing = () => (hdReady !== null && hdRef.current ? hdRef.current : playerRef.current);
 
@@ -127,7 +126,6 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
     }
     playerRef.current?.pause();
     hdRef.current?.pause();
-    upgrading.current = null;
     setHdReady(null);
     setOpen(null);
   };
@@ -137,7 +135,6 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
     const i = (open + delta + reels.length) % reels.length;
     startAt.current = 0;
     hdRef.current?.pause();
-    upgrading.current = null;
     setHdReady(null);
     setOpen(i);
   };
@@ -306,6 +303,154 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
   const largeScreen = useLargeScreen();
   const hdSrc = open !== null && current && largeScreen ? current.videoHd : null;
   const hdShowing = hdSrc !== null && hdReady === current?.id;
+  const currentId = current?.id ?? null;
+
+  /*
+   * Light → HD hand-over, without a freeze:
+   * 1. While the light version keeps playing, the hidden HD player is parked a few seconds ahead and buffers there.
+   * 2. When the light version reaches that point and HD has several seconds ready, HD starts and the light version
+   *    stops at the same instant, so playback carries on in step.
+   * 3. If HD isn't ready in time, it's parked further ahead and tries again. If HD stalls after taking over,
+   *    playback drops back to the light version at the same moment and HD tries again later.
+   */
+  useEffect(() => {
+    const hd = hdRef.current;
+    const light = playerRef.current;
+    if (!hdSrc || !hd || !light || !currentId) return;
+
+    const LEAD = 4; // seconds ahead to park HD
+    const NEED = 4; // seconds HD must have buffered from that point
+    let target = -1;
+    let attempts = 0;
+    let frame = 0;
+    let retry = 0;
+    let stallTimer = 0;
+    let swapped = false;
+    let stopped = false;
+
+    const ahead = (v: HTMLVideoElement, t: number) => {
+      for (let i = 0; i < v.buffered.length; i++) {
+        if (v.buffered.start(i) <= t + 0.1 && v.buffered.end(i) >= t) return v.buffered.end(i) - t;
+      }
+      return 0;
+    };
+    const park = () => {
+      const duration = light.duration || hd.duration || Infinity;
+      target = light.currentTime + LEAD * (attempts + 1);
+      attempts += 1;
+      // Too close to the end to be worth it: stay on the light version.
+      if (target > duration - 2) {
+        target = -1;
+        return;
+      }
+      hd.currentTime = target;
+    };
+    // HD starts playing silently, hidden, in step with the light version (a paused hidden video takes about a
+    // second to wake up). The visible swap happens only once HD is confirmed moving at the same moment.
+    let syncing = false;
+    let syncStart = 0;
+    const startSync = () => {
+      syncing = true;
+      syncStart = performance.now();
+      hd.muted = true;
+      hd.play().catch(() => {});
+    };
+    const handOver = () => {
+      syncing = false;
+      hd.muted = light.muted;
+      hd.volume = light.volume;
+      light.pause();
+      swapped = true;
+      setHdReady(currentId);
+    };
+    const abandonSync = () => {
+      syncing = false;
+      hd.pause();
+      park();
+    };
+    const fallBack = () => {
+      // HD stalled: carry on with the light version from the same moment, and try HD again later.
+      light.currentTime = hd.currentTime;
+      light.muted = hd.muted;
+      light.volume = hd.volume;
+      light.play().catch(() => {});
+      hd.pause();
+      swapped = false;
+      syncing = false;
+      attempts = 0;
+      target = -1;
+      setHdReady(null);
+      retry = window.setTimeout(() => {
+        if (!stopped) watch();
+      }, 8000);
+    };
+    const watch = () => {
+      frame = requestAnimationFrame(() => {
+        if (stopped || swapped) return;
+        if (hd.readyState < HTMLMediaElement.HAVE_METADATA) return watch();
+        const duration = light.duration || hd.duration || Infinity;
+        if (syncing) {
+          // Positive: HD is behind the light version; negative: ahead of it.
+          const gap = light.currentTime - hd.currentTime;
+          if (!hd.paused && hd.currentTime > target + 0.1) {
+            // Level (within a couple of frames): show HD.
+            if (Math.abs(gap) < 0.08) {
+              hd.playbackRate = 1;
+              return handOver();
+            }
+            // Otherwise nudge HD's speed slightly until it lines up (no seeking, so no stall).
+            hd.playbackRate = gap > 0 ? 1.25 : 0.8;
+          }
+          // The viewer paused or jumped, or it isn't lining up: park HD ahead again.
+          if (light.paused || Math.abs(gap) > 3 || performance.now() - syncStart > 6000) {
+            hd.playbackRate = 1;
+            abandonSync();
+          }
+          return watch();
+        }
+        // Start (or restart after the viewer jumps around) by parking HD ahead of the light version.
+        if (target < 0 || light.currentTime > target + 0.5 || light.currentTime < target - LEAD * 4) {
+          attempts = 0;
+          park();
+          if (target < 0) return;
+          return watch();
+        }
+        const ready =
+          !hd.seeking &&
+          hd.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA &&
+          ahead(hd, target) >= Math.min(NEED, duration - target - 0.2);
+        // Start HD a moment before the light version reaches its parked spot, to allow for its wake-up time.
+        if (light.currentTime >= target - 1.2) {
+          if (ready && !light.paused) {
+            startSync();
+            return watch();
+          }
+          // Not ready by the time the light version gets there: park a bit further ahead.
+          if (!ready && light.currentTime >= target - 0.03 && attempts < 4) park();
+        }
+        watch();
+      });
+    };
+    const onWaiting = () => {
+      if (!swapped) return;
+      window.clearTimeout(stallTimer);
+      stallTimer = window.setTimeout(() => {
+        if (swapped && hd.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) fallBack();
+      }, 1200);
+    };
+    const onPlaying = () => window.clearTimeout(stallTimer);
+    hd.addEventListener("waiting", onWaiting);
+    hd.addEventListener("playing", onPlaying);
+    watch();
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(frame);
+      window.clearTimeout(retry);
+      window.clearTimeout(stallTimer);
+      hd.removeEventListener("waiting", onWaiting);
+      hd.removeEventListener("playing", onPlaying);
+    };
+  }, [hdSrc, currentId]);
 
   return (
     <div {...pauseHandlers}>
@@ -499,25 +644,6 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
                 controls={hdShowing}
                 aria-hidden={!hdShowing}
                 tabIndex={hdShowing ? 0 : -1}
-                onCanPlay={(e) => {
-                  // First time the HD copy can play: line it up with the light one.
-                  const light = playerRef.current;
-                  if (!light || upgrading.current === current.id || hdReady === current.id) return;
-                  upgrading.current = current.id;
-                  e.currentTarget.currentTime = light.currentTime;
-                }}
-                onSeeked={(e) => {
-                  // Lined up: hand over to HD at the same moment, with the same sound settings.
-                  const light = playerRef.current;
-                  if (!light || upgrading.current !== current.id || hdReady === current.id) return;
-                  const hd = e.currentTarget;
-                  hd.currentTime = light.currentTime;
-                  hd.muted = light.muted;
-                  hd.volume = light.volume;
-                  if (!light.paused) hd.play().catch(() => {});
-                  light.pause();
-                  setHdReady(current.id);
-                }}
                 onWaiting={() => hdShowing && setPlayerBuffering(true)}
                 onPlaying={() => setPlayerBuffering(false)}
                 className={`absolute inset-x-0 top-0 aspect-[9/16] w-full bg-black transition-opacity duration-300 ${
