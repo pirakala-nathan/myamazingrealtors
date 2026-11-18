@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePause } from "./use-pause";
 
 export type ReelSlide = {
   id: string;
@@ -25,7 +26,7 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
   // Playback progress of the playing reel, tagged with its index so a new reel starts at 0.
   const [progress, setProgress] = useState({ index: 0, value: 0 });
   const [inView, setInView] = useState(false);
-  const [hovering, setHovering] = useState(false);
+  const { paused: hovering, handlers: pauseHandlers } = usePause();
   // Only steers playback (nothing rendered depends on it), so reading it on the client is safe.
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -153,10 +154,7 @@ export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
 
   return (
     <div
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
-      onFocus={() => setHovering(true)}
-      onBlur={() => setHovering(false)}
+      {...pauseHandlers}
     >
       <ul
         ref={trackRef}

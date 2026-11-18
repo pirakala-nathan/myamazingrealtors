@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePause } from "./use-pause";
 
 export type ReviewCard = {
   text: string;
@@ -37,7 +38,7 @@ export function ReviewCarousel({ reviews }: { reviews: ReviewCard[] }) {
   const [active, setActive] = useState(0);
   const [inView, setInView] = useState(false);
   const [entered, setEntered] = useState(false);
-  const [paused, setPaused] = useState(false);
+  const { paused, handlers: pauseHandlers } = usePause();
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
@@ -125,11 +126,7 @@ export function ReviewCarousel({ reviews }: { reviews: ReviewCard[] }) {
 
   return (
     <div
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
-      onTouchStart={() => setPaused(true)}
+      {...pauseHandlers}
     >
       <ul
         ref={trackRef}
