@@ -1,5 +1,5 @@
 import "server-only";
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { site } from "@/lib/site";
 
 /**
@@ -37,7 +37,11 @@ export type GoogleReviews = {
   count: number;
   mapsUri: string | null;
   reviews: GoogleReview[];
+  /** business-profile: PK's newest reviews. places: Google's 5 most relevant, re-sorted newest first. */
+  source: "business-profile" | "places";
 };
+
+export const GOOGLE_REVIEWS_TAG = "google-reviews";
 
 type ApiReview = {
   rating?: number;
@@ -56,9 +60,26 @@ type ApiPlace = {
   reviews?: ApiReview[];
 };
 
+/**
+ * PK's Google rating and reviews: from the Business Profile API when PK has connected it on /admin
+ * (newest reviews first), otherwise from the Places API.
+ */
 export async function getGoogleReviews(): Promise<GoogleReviews | null> {
   "use cache";
+  cacheTag(GOOGLE_REVIEWS_TAG);
   cacheLife({ stale: 3600, revalidate: 6 * 3600, expire: 24 * 3600 });
+
+  try {
+    const { fetchBusinessReviews } = await import("@/lib/google-business");
+    const business = await fetchBusinessReviews();
+    if (business) return business;
+  } catch (error) {
+    console.error("[google-reviews] Business Profile request failed; using the Places API", error);
+  }
+  return placesReviews();
+}
+
+async function placesReviews(): Promise<GoogleReviews | null> {
 
   const key = process.env.GOOGLE_PLACES_API_KEY;
   const placeId = process.env.GOOGLE_PLACE_ID || site.googlePlaceId;
@@ -97,6 +118,7 @@ export async function getGoogleReviews(): Promise<GoogleReviews | null> {
         .filter((r) => r.text.length > 0)
         // Newest first. Reviews without a date keep Google's order, after the dated ones.
         .sort((a, b) => (b.publishTime ?? "").localeCompare(a.publishTime ?? "")),
+      source: "places",
     };
   } catch (error) {
     console.error("[google-reviews] request failed", error);

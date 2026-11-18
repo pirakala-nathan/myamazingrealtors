@@ -8,13 +8,15 @@ import { getListingsForAdmin } from "@/lib/listings/store";
 import { listingTitle, statusLabel } from "@/lib/listings/types";
 import { site } from "@/lib/site";
 import { AddListingForm, RowActions } from "./listing-controls";
+import { GoogleReviewsPanel } from "./google-panel";
 import { ManualListingForm } from "./manual-listing-form";
 
 export const metadata: Metadata = { title: "Listings" };
 
-async function Dashboard() {
+async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["searchParams"] }) {
   await requireAdmin();
   const listings = await getListingsForAdmin();
+  const googleResult = (await searchParams).google;
   const usingSample = !process.env.PROPTX_TOKEN;
 
   return (
@@ -37,6 +39,8 @@ async function Dashboard() {
           you can try the pages. Add <code>PROPTX_TOKEN</code> to pull real listings.
         </p>
       )}
+
+      <GoogleReviewsPanel result={typeof googleResult === "string" ? googleResult : undefined} />
 
       <section className="flex flex-col gap-4 border border-cloud-300 bg-mist-50 p-6 md:p-8">
         <h2 className="font-display text-3xl font-semibold">Add a listing</h2>
@@ -86,10 +90,10 @@ async function Dashboard() {
   );
 }
 
-export default function AdminPage() {
+export default function AdminPage({ searchParams }: PageProps<"/admin">) {
   return (
     <Suspense fallback={<p className="text-muted">Loading…</p>}>
-      <Dashboard />
+      <Dashboard searchParams={searchParams} />
     </Suspense>
   );
 }

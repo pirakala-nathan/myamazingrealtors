@@ -1,6 +1,8 @@
 "use server";
 
 import { updateTag } from "next/cache";
+import { clearConnection } from "@/lib/google-business";
+import { GOOGLE_REVIEWS_TAG } from "@/lib/google-reviews";
 import { redirect } from "next/navigation";
 import { adminConfigured, endSession, passwordMatches, requireAdmin, startSession } from "@/lib/admin-auth";
 import { z } from "zod";
@@ -232,4 +234,11 @@ export async function saveManualListing(_prev: AdminFormState, formData: FormDat
   updateTag(LISTINGS_TAG);
   if (editing) redirect("/admin?saved=" + encodeURIComponent(listing.mlsNumber));
   return { status: "success", message: `Added ${listingTitle(listing)} (${listing.mlsNumber}).` };
+}
+
+/** Forgets the Business Profile connection; the site falls back to the Places API reviews. */
+export async function disconnectGoogle() {
+  await requireAdmin();
+  await clearConnection();
+  updateTag(GOOGLE_REVIEWS_TAG);
 }
