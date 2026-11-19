@@ -45,7 +45,7 @@ export function Services() {
                 className={`group flex h-full flex-col gap-3 border px-7 py-8 transition-colors ${
                   highlight
                     ? "border-aqua-400 bg-aqua-400 text-navy-900 hover:bg-aqua-300"
-                    : "border-cloud-300 bg-mist-50 hover:border-navy-900"
+                    : "border-cloud-300 bg-mist-50 hover:border-ink"
                 }`}
               >
                 <svg
@@ -62,7 +62,7 @@ export function Services() {
                 </svg>
                 <span className="mt-2 text-[21px] font-extrabold">{s.title}</span>
                 <span className={`text-[15px] leading-relaxed ${highlight ? "text-navy-900" : "text-body"}`}>{s.body}</span>
-                <span className={`mt-auto pt-2 font-extrabold ${highlight ? "" : "text-aqua-700 group-hover:text-navy-900"}`}>
+                <span className={`mt-auto pt-2 font-extrabold ${highlight ? "" : "text-aqua-700 group-hover:text-ink"}`}>
                   {s.cta} →
                 </span>
               </Link>
@@ -185,7 +185,7 @@ export async function Testimonials() {
               : "Source: Google Maps. Showing Google’s most relevant reviews, newest first. Reviews aren’t verified by Google."}
           </span>
           {google.mapsUri && (
-            <a href={google.mapsUri} target="_blank" rel="noopener noreferrer" className="font-bold text-aqua-700 hover:text-navy-900">
+            <a href={google.mapsUri} target="_blank" rel="noopener noreferrer" className="font-bold text-aqua-700 hover:text-ink">
               Read all {google.count} reviews on Google Maps →
             </a>
           )}

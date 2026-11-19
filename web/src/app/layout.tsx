@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { MobileActionBar } from "@/components/layout/mobile-action-bar";
 import { JsonLd, realEstateAgentSchema } from "@/components/seo/json-ld";
 import { Intro } from "@/components/layout/intro";
+import { ThemeScript } from "@/components/layout/theme-script";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -47,9 +48,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // suppressHydrationWarning: the intro script briefly locks page scroll on <html> before React loads.
+    // suppressHydrationWarning: before React loads, the theme script sets data-theme on <html> and the
+    // intro script briefly locks page scroll.
     <html lang="en-CA" className={`${cormorant.variable} ${manrope.variable} antialiased`} suppressHydrationWarning>
       <body className="flex min-h-dvh flex-col pb-24 md:pb-0">
+        <ThemeScript />
         <Intro />
         <a
           href="#main"

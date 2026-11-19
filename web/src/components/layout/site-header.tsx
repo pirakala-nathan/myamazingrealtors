@@ -2,6 +2,7 @@ import Link from "next/link";
 import { mainNav } from "@/lib/site";
 import { Logo } from "./logo";
 import { MobileMenu } from "./mobile-menu";
+import { ThemeToggle } from "./theme-toggle";
 import { ButtonLink } from "@/components/ui/button-link";
 
 export function SiteHeader() {
@@ -21,6 +22,7 @@ export function SiteHeader() {
           </ul>
         </nav>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <span className="hidden sm:block">
             <ButtonLink href="/contact" className="whitespace-nowrap">
               Book a call

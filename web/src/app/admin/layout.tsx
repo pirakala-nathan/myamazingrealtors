@@ -6,5 +6,10 @@ export const metadata: Metadata = {
 };
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
-  return <div className="container-site py-12 md:py-16">{children}</div>;
+  // Admin keeps the light theme whatever the visitor picked for the site.
+  return (
+    <div data-theme="light" className="bg-mist-100 text-ink">
+      <div className="container-site py-12 md:py-16">{children}</div>
+    </div>
+  );
 }

@@ -284,7 +284,7 @@ export function SearchPanel({
                       </span>
                       <span
                         className={`ml-auto shrink-0 px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] ${
-                          l.over ? "bg-navy-900 text-aqua-300" : "bg-aqua-100 text-navy-900"
+                          l.over ? "bg-navy-900 text-aqua-300" : "bg-aqua-100 text-ink"
                         }`}
                       >
                         {l.status}
@@ -307,7 +307,7 @@ export function SearchPanel({
             <button
               type="button"
               onClick={searchAll}
-              className="flex w-full items-center justify-between border-t border-cloud-300 px-5 py-3.5 text-left text-sm font-extrabold text-aqua-700 hover:bg-mist-100 hover:text-navy-900"
+              className="flex w-full items-center justify-between border-t border-cloud-300 px-5 py-3.5 text-left text-sm font-extrabold text-aqua-700 hover:bg-mist-100 hover:text-ink"
             >
               {matching.length > MAX_RESULTS ? `See all ${matching.length} results` : "Open the full search"}
               <span aria-hidden="true">→</span>
@@ -346,7 +346,7 @@ export function SearchPanel({
         </div>
         <Link
           href="/home-evaluation"
-          className="hidden pb-3 text-sm font-extrabold text-aqua-700 hover:text-navy-900 md:block"
+          className="hidden pb-3 text-sm font-extrabold text-aqua-700 hover:text-ink md:block"
         >
           Selling? See what your home is worth →
         </Link>
@@ -464,7 +464,7 @@ export function SearchPanel({
         <div className="p-2 md:col-span-3 lg:col-span-1">
           <button
             type="submit"
-            className="flex h-full min-h-13 w-full items-center justify-center gap-2.5 bg-navy-900 px-7 font-extrabold text-on-dark transition-colors hover:bg-aqua-400 hover:text-navy-900"
+            className="flex h-full min-h-13 w-full items-center justify-center gap-2.5 bg-ink px-7 font-extrabold text-mist-100 transition-colors hover:bg-aqua-400 hover:text-navy-900"
           >
             <svg
               width="18"

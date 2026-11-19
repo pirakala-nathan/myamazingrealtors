@@ -57,14 +57,14 @@ function DialogButtons({ l }: { l: CarouselListing }) {
   return (
     <>
       {l.href && (
-        <Link href={l.href} className={`${base} bg-navy-900 text-on-dark hover:bg-aqua-400 hover:text-navy-900`}>
+        <Link href={l.href} className={`${base} bg-ink text-mist-100 hover:bg-aqua-400 hover:text-navy-900`}>
           View full listing
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
             <path d="M5 12h14M13 6l6 6-6 6" />
           </svg>
         </Link>
       )}
-      <Link href="/contact" className={`${base} border-[1.5px] border-navy-900 text-ink hover:bg-navy-900 hover:text-on-dark`}>
+      <Link href="/contact" className={`${base} border-[1.5px] border-ink text-ink hover:bg-ink hover:text-mist-100`}>
         Ask about this home
       </Link>
     </>
@@ -329,7 +329,7 @@ export function ListingsCarousel({ listings }: { listings: CarouselListing[] }) 
 
   const close = useCallback(() => setOpen(null), []);
   const arrow =
-    "flex size-12 items-center justify-center border-[1.5px] border-navy-900 text-ink transition-colors hover:bg-navy-900 hover:text-on-dark";
+    "flex size-12 items-center justify-center border-[1.5px] border-ink text-ink transition-colors hover:bg-ink hover:text-mist-100";
 
   return (
     <div>

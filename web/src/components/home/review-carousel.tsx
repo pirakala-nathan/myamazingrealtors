@@ -123,7 +123,7 @@ export function ReviewCarousel({ reviews }: { reviews: ReviewCard[] }) {
 
   const running = inView && !paused && !reducedMotion && reviews.length > 1;
   const arrow =
-    "flex size-12 items-center justify-center border-[1.5px] border-navy-900 text-ink transition-colors hover:bg-navy-900 hover:text-on-dark";
+    "flex size-12 items-center justify-center border-[1.5px] border-ink text-ink transition-colors hover:bg-ink hover:text-mist-100";
 
   return (
     <div

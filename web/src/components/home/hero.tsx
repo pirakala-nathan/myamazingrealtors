@@ -32,7 +32,7 @@ export async function Hero() {
           <p className="max-w-[460px] text-lg leading-relaxed text-body">{site.agent.intro}</p>
           <Link
             href="/our-listings"
-            className="group inline-flex min-h-12 items-center gap-4 self-start font-extrabold text-aqua-700 hover:text-navy-900"
+            className="group inline-flex min-h-12 items-center gap-4 self-start font-extrabold text-aqua-700 hover:text-ink"
           >
             Explore listings
             <svg
@@ -51,7 +51,7 @@ export async function Hero() {
         </div>
 
         <div className="relative mx-auto w-full max-w-[420px] p-4 sm:p-5">
-          <div aria-hidden="true" className="absolute inset-0 rounded-full border border-navy-900" />
+          <div aria-hidden="true" className="absolute inset-0 rounded-full border border-ink" />
           <div aria-hidden="true" className="absolute right-0 top-[4%] h-[62%] w-[62%] rounded-full bg-aqua-400" />
           <div className="relative aspect-square overflow-hidden rounded-full">
             <Image
@@ -217,7 +217,7 @@ export async function LatestListings() {
               <strong className="font-display text-2xl font-semibold text-ink">{sold}</strong> recently sold
             </span>
           )}
-          <Link href="/our-listings" className="font-extrabold text-aqua-700 hover:text-navy-900">
+          <Link href="/our-listings" className="font-extrabold text-aqua-700 hover:text-ink">
             See all listings →
           </Link>
         </div>

@@ -4,7 +4,7 @@ import { HouseLoader } from "@/components/ui/house-loader";
 import { CONSENT_TEXT, type FormState } from "@/lib/forms";
 
 const control =
-  "w-full rounded-none border border-cloud-400 bg-mist-50 px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-navy-900 focus:outline-none focus-visible:outline-2 aria-[invalid=true]:border-red-700";
+  "w-full rounded-none border border-cloud-400 bg-mist-50 px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-ink focus:outline-none focus-visible:outline-2 aria-[invalid=true]:border-red-700";
 
 type FieldProps = {
   name: string;
@@ -161,7 +161,7 @@ export function SubmitButton({ pending, children }: { pending: boolean; children
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex min-h-13 w-full items-center justify-center rounded-none bg-navy-900 px-8 py-4 text-base font-bold text-on-dark transition-colors hover:bg-navy-700 hover:text-aqua-300 disabled:cursor-wait disabled:opacity-70 sm:w-auto"
+      className="inline-flex min-h-13 w-full items-center justify-center rounded-none bg-ink px-8 py-4 text-base font-bold text-mist-100 transition-colors hover:bg-navy-700 hover:text-aqua-300 disabled:cursor-wait disabled:opacity-70 sm:w-auto"
     >
       {pending ? (
         <span className="flex items-center gap-3">

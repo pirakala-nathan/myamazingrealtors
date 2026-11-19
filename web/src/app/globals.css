@@ -50,6 +50,70 @@
   --container-site: 80rem; /* 1280px */
 }
 
+/*
+ * Dark theme (src/components/layout/theme-toggle.tsx). The colour tokens above are swapped, so every
+ * light surface turns deep navy, text turns light and cyan links brighten for contrast. The navy
+ * sections stay navy, a shade lighter than the page so they still read as bands.
+ * [data-theme] is set on <html> before first paint by the script in theme-script.tsx. Admin pages
+ * keep the light theme (their wrapper sets data-theme="light").
+ */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-mist-50: #0e2230;
+  --color-mist-100: #071520;
+  --color-white: #10283a;
+  --color-cloud-300: #1e3a4d;
+  --color-cloud-400: #2d4b60;
+  --color-aqua-100: #0c3240;
+  --color-aqua-700: #5fcfeb;
+  --color-navy-900: #0d2434;
+  --color-ink: #eef4f7;
+  --color-body: #c2d1d9;
+  --color-muted: #9fb2bd;
+  --color-logo-grey: #9a9b9e;
+}
+[data-theme="light"] {
+  color-scheme: light;
+  --color-mist-50: #f8fbfc;
+  --color-mist-100: #eef4f7;
+  --color-white: #ffffff;
+  --color-cloud-300: #d3dee4;
+  --color-cloud-400: #b9c8d0;
+  --color-aqua-100: #d9f3fa;
+  --color-aqua-700: #00708f;
+  --color-navy-900: #0a1d28;
+  --color-ink: #0a1d28;
+  --color-body: #3d4a52;
+  --color-muted: #5d5e62;
+  --color-logo-grey: #6e6f72;
+}
+
+/* Things that differ by theme beyond colours: the header logo has a light and a dark version. */
+[data-theme="dark"] .theme-light-only,
+:root:not([data-theme="dark"]) .theme-dark-only {
+  display: none;
+}
+
+/*
+ * Switching theme: the new theme sweeps across from the switch in a growing circle (View Transitions,
+ * animated in theme-toggle.tsx). Browsers without View Transitions get a short colour fade instead.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+.theme-fading,
+.theme-fading *,
+.theme-fading *::before,
+.theme-fading *::after {
+  transition:
+    background-color 0.45s ease,
+    color 0.45s ease,
+    border-color 0.45s ease,
+    fill 0.45s ease !important;
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
@@ -204,6 +268,12 @@
   --hl-off: var(--color-cloud-300);
   --hl-on: var(--color-navy-900);
   --hl-label: var(--color-muted);
+}
+/* On the dark theme, light-background loaders take the dark look. */
+[data-theme="dark"] .house-loader-light {
+  --hl-off: #1f3442;
+  --hl-on: #ffffff;
+  --hl-label: #b8c4cc;
 }
 .house-loader-dark {
   --hl-off: var(--color-navy-700);

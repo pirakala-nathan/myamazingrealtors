@@ -29,7 +29,7 @@ export function StatusBadge({ listing, className = "" }: { listing: Listing; cla
   return (
     <span
       className={`px-3 py-1.5 text-xs font-extrabold uppercase tracking-wider ${
-        sold ? "bg-navy-900 text-aqua-400" : "bg-mist-50 text-navy-900"
+        sold ? "bg-navy-900 text-aqua-400" : "bg-mist-50 text-ink"
       } ${className}`}
     >
       {statusLabel[listing.status]}
