@@ -85,6 +85,8 @@ The homepage carousel (`src/components/home/reel-carousel.tsx`) plays the first 
 Until PropTx is connected (or for a listing outside the feed), PK can use **Add a listing by hand** on `/admin`: address, city, MLS® number, status, price, details, description and photos.
 - Up to 6 photos per listing (`MAX_MANUAL_PHOTOS`); older listings with more are trimmed to their first 6 automatically when read, and saved that way on the next edit. Photos are resized in the browser to 2000px and uploaded one at a time to Firebase Storage under `listings/` (`FIREBASE_STORAGE_BUCKET`, e.g. `my-project.firebasestorage.app`). In local development without Firebase they go to `public/uploads/` (git-ignored). The first photo is the cover.
 - Hand-entered listings show **Edit** instead of Refresh, so PropTx never overwrites them.
+- **Address autocomplete:** typing in the street field suggests addresses from Google (Places API (New) Autocomplete, then Place Details for the address parts); picking one fills the street with any unit, the city (Toronto addresses use the old city, such as Scarborough) and the postal code. It reuses `GOOGLE_PLACES_API_KEY` through server actions, so the key never reaches the browser (`src/lib/address-lookup.ts`, `src/app/admin/address-input.tsx`). Without the key, the field works as plain text.
+- **Purchased** status is for homes PK helped clients buy on another brokerage's listing: it requires the listing brokerage, which is credited on the listing page.
 - Sold and leased listings with photos replace the sample sales in the homepage "Recently sold" section (newest 4). The "Sold over asking" badge is a checkbox on the form. Sold prices are never shown.
 - Removing a listing or a photo leaves the photo file in Storage.
 

@@ -209,6 +209,30 @@ const manualSchema = z.object({
   originalMlsNumber: z.string().optional(),
 });
 
+/** Address suggestions while PK types a street address in the hand-entry form. */
+export async function lookupAddressSuggestions(input: string, sessionToken: string) {
+  await requireAdmin();
+  const { suggestAddresses } = await import("@/lib/address-lookup");
+  try {
+    return await suggestAddresses(String(input), String(sessionToken).slice(0, 80));
+  } catch (error) {
+    console.error("[admin] address suggestions failed", error);
+    return [];
+  }
+}
+
+/** The street, city and postal code for the suggestion PK picked. */
+export async function lookupAddressDetails(placeId: string, sessionToken: string) {
+  await requireAdmin();
+  const { addressDetails } = await import("@/lib/address-lookup");
+  try {
+    return await addressDetails(String(placeId), String(sessionToken).slice(0, 80));
+  } catch (error) {
+    console.error("[admin] address details failed", error);
+    return null;
+  }
+}
+
 /** Creates or updates a listing PK typed in by hand. */
 export async function saveManualListing(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   await requireAdmin();

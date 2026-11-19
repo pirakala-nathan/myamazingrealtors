@@ -3,6 +3,7 @@
 import { useActionState, useRef, useState, useTransition } from "react";
 import { saveManualListing, uploadListingPhoto, type AdminFormState } from "@/app/actions/admin";
 import { HouseLoader } from "@/components/ui/house-loader";
+import { AddressInput } from "./address-input";
 import { MAX_MANUAL_PHOTOS, type Listing } from "@/lib/listings/types";
 
 const initial: AdminFormState = { status: "idle" };
@@ -65,6 +66,8 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
   } | null>(null);
   const [submitting, startSubmit] = useTransition();
   const [dragging, setDragging] = useState<number | null>(null);
+  // Bumped after a new listing is saved, to clear the address field (which keeps its own value).
+  const [resetCount, setResetCount] = useState(0);
 
   /** Moves the photo at `from` to position `to` (0 is the cover). */
   const movePhoto = (from: number, to: number) =>
@@ -83,6 +86,7 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
       setPhotos([]);
       setStatus("sold");
       setUpload(null);
+      setResetCount((n) => n + 1);
     }
     return result;
   }, initial);
@@ -145,14 +149,19 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
       <input type="hidden" name="photos" value={JSON.stringify(photos)} />
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field name="street" label="Street address" state={state}>
-          <input
-            id="m-street"
-            name="street"
+        <Field name="street" label="Street address" hint="(start typing to pick the address)" state={state}>
+          <AddressInput
+            key={resetCount}
             defaultValue={listing?.street ?? ""}
-            placeholder="27 Aldgate Crescent"
             className={input}
-            {...err("street")}
+            inputProps={{ id: "m-street", name: "street", placeholder: "27 Aldgate Crescent", ...err("street") }}
+            onPick={(address) => {
+              // Fill the city and postal code from the address PK picked.
+              const city = formRef.current?.elements.namedItem("city");
+              const postal = formRef.current?.elements.namedItem("postalCode");
+              if (city instanceof HTMLInputElement && address.city) city.value = address.city;
+              if (postal instanceof HTMLInputElement && address.postalCode) postal.value = address.postalCode;
+            }}
           />
         </Field>
         <Field name="city" label="City" state={state}>
