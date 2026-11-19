@@ -17,7 +17,10 @@ export async function generateMetadata({ params }: PageProps<"/listings/[slug]">
   const title = `${listingTitle(listing)} | ${statusLabel[listing.status]}`;
   return {
     title,
-    description: `${factsLine(listing)} in ${listing.city}. MLS® ${listing.mlsNumber}. Listed with ${site.agent.name}, ${site.brokerage.name}.`,
+    description:
+      listing.status === "purchased"
+        ? `${factsLine(listing)} in ${listing.city}. MLS® ${listing.mlsNumber}. Buyers represented by ${site.agent.name}, ${site.brokerage.name.replace(/\.$/, "")}.`
+        : `${factsLine(listing)} in ${listing.city}. MLS® ${listing.mlsNumber}. Listed with ${site.agent.name}, ${site.brokerage.name.replace(/\.$/, "")}.`,
     alternates: { canonical: `/listings/${listing.slug}` },
     openGraph: listing.photos[0] ? { images: [listing.photos[0]] } : undefined,
   };
@@ -59,6 +62,11 @@ async function ListingDetail({ params }: { params: PageProps<"/listings/[slug]">
           {price && <span className="font-display text-4xl font-semibold">{price}</span>}
           <span className="text-body">{factsLine(listing)}</span>
         </p>
+        {listing.status === "purchased" && (
+          <p className="text-body">
+            {site.agent.firstName} represented the buyers of this home. Listed by {listing.listOffice ?? "another brokerage"}.
+          </p>
+        )}
       </div>
 
       {hero && (
@@ -130,15 +138,28 @@ async function ListingDetail({ params }: { params: PageProps<"/listings/[slug]">
 
         <aside className="flex flex-col gap-4 self-start bg-navy-900 p-8 text-on-dark-muted lg:sticky lg:top-28">
           <h2 className="font-display text-3xl font-semibold text-on-dark">
-            {listing.status === "active" ? "Want to see it?" : "Thinking of selling?"}
+            {listing.status === "active"
+              ? "Want to see it?"
+              : listing.status === "purchased"
+                ? "Looking to buy?"
+                : "Thinking of selling?"}
           </h2>
           <p className="leading-relaxed">
             {listing.status === "active"
               ? `Book a showing or ask ${site.agent.firstName} anything about this home.`
-              : `${site.agent.firstName} can tell you what this sale means for your home’s value.`}
+              : listing.status === "purchased"
+                ? `${site.agent.firstName} helped these buyers find and win their home. Tell ${site.agent.firstName} what you’re looking for.`
+                : `${site.agent.firstName} can tell you what this sale means for your home’s value.`}
           </p>
-          <ButtonLink href={listing.status === "active" ? "/contact" : "/home-evaluation"} variant="accent">
-            {listing.status === "active" ? "Book a showing" : "What’s my home worth?"}
+          <ButtonLink
+            href={listing.status === "active" ? "/contact" : listing.status === "purchased" ? "/buy" : "/home-evaluation"}
+            variant="accent"
+          >
+            {listing.status === "active"
+              ? "Book a showing"
+              : listing.status === "purchased"
+                ? "Start your search"
+                : "What’s my home worth?"}
           </ButtonLink>
           <a
             href={site.agent.phoneHref}

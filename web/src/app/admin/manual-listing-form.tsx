@@ -203,6 +203,7 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
             <option value="pending">Sold conditional</option>
             <option value="sold">Sold</option>
             <option value="leased">Leased</option>
+            <option value="purchased">Purchased (I represented the buyer)</option>
             <option value="off-market">Off market</option>
           </select>
         </Field>
@@ -220,7 +221,7 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
         <Field
           name="listPrice"
           label="List price"
-          hint={sold ? "(shown only while for sale)" : "(per month for leases)"}
+          hint={sold || status === "purchased" ? "(shown only while for sale)" : "(per month for leases)"}
           state={state}
         >
           <input
@@ -278,6 +279,24 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
         <Field name="sizeRange" label="Size (sq ft)" hint="(optional, e.g. 1500-2000)" state={state}>
           <input id="m-sizeRange" name="sizeRange" defaultValue={listing?.sizeRange ?? ""} className={input} />
         </Field>
+        {status === "purchased" && (
+          <div className="flex flex-col gap-2 sm:col-span-2">
+            <Field name="listOffice" label="Listing brokerage" hint="(credited on the listing page)" state={state}>
+              <input
+                id="m-listOffice"
+                name="listOffice"
+                defaultValue={listing?.status === "purchased" ? (listing.listOffice ?? "") : ""}
+                placeholder="e.g. Royal LePage Signature Realty"
+                className={input}
+                {...err("listOffice")}
+              />
+            </Field>
+            <p className="border-l-4 border-aqua-500 bg-aqua-100 px-4 py-3 text-sm text-body">
+              Use your own photos, or ones you have permission to use. MLS® photos from another brokerage’s listing
+              belong to that brokerage.
+            </p>
+          </div>
+        )}
         {sold && (
           <label className="flex items-center gap-3 self-end py-3 text-sm font-bold">
             <input

@@ -167,7 +167,9 @@ const manualSchema = z.object({
   street: text(120).min(3, "Enter the street address."),
   city: text(60).min(2, "Enter the city."),
   postalCode: optionalText(10),
-  status: z.enum(["active", "pending", "sold", "leased", "off-market"]),
+  status: z.enum(["active", "pending", "sold", "leased", "purchased", "off-market"]),
+  /** For purchased homes: the brokerage that listed it (credited on the listing page). */
+  listOffice: optionalText(120),
   transactionType: z.enum(["For Sale", "For Lease"]),
   listPrice: z
     .string()
@@ -219,6 +221,13 @@ export async function saveManualListing(_prev: AdminFormState, formData: FormDat
     };
   }
   const d = parsed.data;
+  if (d.status === "purchased" && !d.listOffice) {
+    return {
+      status: "error",
+      message: "Please check the highlighted fields.",
+      fieldErrors: { listOffice: ["Enter the brokerage that listed this home. It’s credited on the listing page."] },
+    };
+  }
   const editing = d.originalMlsNumber ? await findListing(d.originalMlsNumber) : null;
   const clash = await findListing(d.mlsNumber);
   if (clash && clash.mlsNumber !== editing?.mlsNumber) {
@@ -241,7 +250,8 @@ export async function saveManualListing(_prev: AdminFormState, formData: FormDat
     propertyType: d.propertyType,
     sizeRange: d.sizeRange,
     description: d.description,
-    listOffice: site.brokerage.name,
+    // PK's own listings credit his brokerage; purchased homes credit the brokerage that listed them.
+    listOffice: d.status === "purchased" ? d.listOffice : site.brokerage.name,
     photos: d.photos,
     latitude: null,
     longitude: null,

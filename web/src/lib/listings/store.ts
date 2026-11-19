@@ -47,7 +47,7 @@ async function readAll(): Promise<Listing[]> {
   return snap.docs.map((d) => trim(d.data() as Listing));
 }
 
-const order: Record<Listing["status"], number> = { active: 0, pending: 1, sold: 2, leased: 2, "off-market": 3 };
+const order: Record<Listing["status"], number> = { active: 0, pending: 1, sold: 2, leased: 2, purchased: 2, "off-market": 3 };
 
 /** All listings on the site: active first, then newest added. Cached until a listing changes. */
 export async function getListings(): Promise<Listing[]> {

@@ -4,7 +4,7 @@ import { site } from "@/lib/site";
 import { heroStats, recentSales } from "@/lib/content/home";
 import { formatRating, getGoogleReviews } from "@/lib/google-reviews";
 import { getListings } from "@/lib/listings/store";
-import { statusLabel } from "@/lib/listings/types";
+import { isPastDeal, statusLabel } from "@/lib/listings/types";
 import { SearchPanel } from "@/components/listings/search-panel";
 import { searchableListings } from "@/components/listings/searchable";
 import { locationOptions, typeOptions } from "@/lib/listings/filters";
@@ -190,7 +190,7 @@ async function carouselListings(): Promise<{ items: CarouselListing[]; forSale: 
   return {
     items: items.length >= 3 ? items : [...items, ...samples].slice(0, Math.max(3, items.length)),
     forSale: all.filter((l) => l.status === "active" || l.status === "pending").length,
-    sold: all.filter((l) => l.status === "sold" || l.status === "leased").length,
+    sold: all.filter((l) => isPastDeal(l.status)).length,
   };
 }
 

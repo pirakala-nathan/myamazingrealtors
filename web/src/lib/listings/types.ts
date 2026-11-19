@@ -1,5 +1,9 @@
 /** A listing PK has added to the site, stored in Firestore under its MLS® number. */
-export type ListingStatus = "active" | "pending" | "sold" | "leased" | "off-market";
+/** purchased: PK represented the buyer on another brokerage's listing (always entered by hand). */
+export type ListingStatus = "active" | "pending" | "sold" | "leased" | "purchased" | "off-market";
+
+/** Completed deals: sold or leased (PK's listings) and purchased (PK's buyers). */
+export const isPastDeal = (status: ListingStatus) => status === "sold" || status === "leased" || status === "purchased";
 
 export type Listing = {
   mlsNumber: string;
@@ -44,6 +48,7 @@ export const statusLabel: Record<ListingStatus, string> = {
   pending: "Sold conditional",
   sold: "Sold",
   leased: "Leased",
+  purchased: "Purchased",
   "off-market": "Off market",
 };
 

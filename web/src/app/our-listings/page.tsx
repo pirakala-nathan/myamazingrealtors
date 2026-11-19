@@ -9,7 +9,7 @@ import { SearchPanel } from "@/components/listings/search-panel";
 import { searchableListings } from "@/components/listings/searchable";
 import { describeFilters, hasFilters, locationOptions, matchesFilters, parseFilters, toFilterable, typeOptions } from "@/lib/listings/filters";
 import { getListings } from "@/lib/listings/store";
-import type { Listing } from "@/lib/listings/types";
+import { isPastDeal, type Listing } from "@/lib/listings/types";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -36,7 +36,7 @@ async function Results({ searchParams }: { searchParams: PageProps<"/our-listing
   const filtering = hasFilters(filters);
   const listings = filtering ? all.filter((l) => matchesFilters(toFilterable(l), filters)) : all;
   const current = listings.filter((l) => l.status === "active" || l.status === "pending");
-  const past = listings.filter((l) => l.status === "sold" || l.status === "leased");
+  const past = listings.filter((l) => isPastDeal(l.status));
 
   return (
     <>
@@ -76,7 +76,7 @@ async function Results({ searchParams }: { searchParams: PageProps<"/our-listing
 
       {filters.show !== "for-sale" && past.length > 0 && (
         <div className="flex flex-col gap-8">
-          <h2 className="font-display text-[clamp(2.25rem,4vw,3.25rem)] font-semibold leading-none">Recently sold.</h2>
+          <h2 className="font-display text-[clamp(2.25rem,4vw,3.25rem)] font-semibold leading-none">Recent sales.</h2>
           <Grid listings={past} />
         </div>
       )}

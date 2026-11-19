@@ -1,4 +1,4 @@
-import type { Listing } from "@/lib/listings/types";
+import { isPastDeal, type Listing } from "@/lib/listings/types";
 
 /**
  * Listing search filters, shared by the homepage search panel (live results in the browser)
@@ -11,7 +11,7 @@ import type { Listing } from "@/lib/listings/types";
 export const SHOW_OPTIONS = [
   { value: "", label: "All listings" },
   { value: "for-sale", label: "For sale" },
-  { value: "sold", label: "Sold & leased" },
+  { value: "sold", label: "Recent sales" },
 ] as const;
 
 export const PRICE_RANGES = [
@@ -72,7 +72,7 @@ export function parseFilters(params: Record<string, string | string[] | undefine
 export const hasFilters = (f: ListingFilters) => Boolean(f.q || f.show || f.type || f.price || f.beds);
 
 export function toFilterable(l: Listing): Filterable {
-  const group = l.status === "active" || l.status === "pending" ? "for-sale" : l.status === "sold" || l.status === "leased" ? "sold" : "other";
+  const group = l.status === "active" || l.status === "pending" ? "for-sale" : isPastDeal(l.status) ? "sold" : "other";
   return {
     group,
     type: l.propertyType,

@@ -1,5 +1,5 @@
 import type { Listing } from "@/lib/listings/types";
-import { statusLabel } from "@/lib/listings/types";
+import { isPastDeal, statusLabel } from "@/lib/listings/types";
 
 /** True when the listing should get the special "over asking" badge. */
 export const isOverAsking = (l: Pick<Listing, "status" | "soldOverAsking">) =>
@@ -25,7 +25,7 @@ export function OverAskingBadge({ leased = false, className = "" }: { leased?: b
 /** The badge on a listing photo: the over-asking badge when it applies, otherwise the plain status. */
 export function StatusBadge({ listing, className = "" }: { listing: Listing; className?: string }) {
   if (isOverAsking(listing)) return <OverAskingBadge leased={listing.status === "leased"} className={className} />;
-  const sold = listing.status === "sold" || listing.status === "leased";
+  const sold = isPastDeal(listing.status);
   return (
     <span
       className={`px-3 py-1.5 text-xs font-extrabold uppercase tracking-wider ${
