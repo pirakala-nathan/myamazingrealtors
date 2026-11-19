@@ -68,7 +68,12 @@ export async function addListing(_prev: AdminFormState, formData: FormData): Pro
         message: `No listing ${mlsNumber} in your PropTx feed. Your agreement covers RE/MAX Community listings only.`,
       };
     }
-    const listing: Listing = { ...pulled, addedAt: existing?.addedAt ?? new Date().toISOString() };
+    const listing: Listing = {
+      ...pulled,
+      addedAt: existing?.addedAt ?? new Date().toISOString(),
+      // PropTx has no sale price, so "over asking" is PK's own mark; keep it when re-adding.
+      soldOverAsking: existing?.soldOverAsking,
+    };
     await saveListing(listing);
     updateTag(LISTINGS_TAG);
     return {
@@ -86,10 +91,12 @@ export async function refreshListing(mlsNumber: string) {
   if (!existing || existing.source === "manual") return; // typed-in listings are edited by hand, not refreshed
   try {
     const pulled = await pull(mlsNumber);
-    // Gone from the feed (expired, terminated or moved): keep the page but mark it off market.
+    // Gone from the feed: an active listing that expired or was withdrawn goes off market (hidden), but a
+    // sale stays a sale, so PK's sold/leased showcase doesn't lose homes once they age out of the feed.
+    const gone = existing.status === "sold" || existing.status === "leased" ? existing.status : "off-market";
     const listing: Listing = pulled
-      ? { ...pulled, addedAt: existing.addedAt }
-      : { ...existing, status: "off-market", fetchedAt: new Date().toISOString() };
+      ? { ...pulled, addedAt: existing.addedAt, soldOverAsking: existing.soldOverAsking }
+      : { ...existing, status: gone, fetchedAt: new Date().toISOString() };
     await saveListing(listing);
     updateTag(LISTINGS_TAG);
   } catch (error) {

@@ -6,13 +6,15 @@ import type { Listing, ListingStatus } from "./types";
  * Docs: https://developer.ampre.ca  ·  Base: https://query.ampre.ca/odata/
  * Access token: https://syndication.ampre.ca/tokens (shown once; store it in PROPTX_TOKEN).
  *
- * PK's data licence agreement covers the brokerage's listings, so lookups
- * outside RE/MAX Community will come back empty.
+ * PROPTX_TOKEN is PK's DLA (data licence agreement) token. It covers RE/MAX Community Realty's listings,
+ * including closed ones (sold/leased), so lookups outside the brokerage come back empty.
+ * (PK also has an IDX token for all active TRREB listings; it's for a future full home search.)
  *
- * Field names follow the RESO Data Dictionary. Only ListingKey, ListPrice,
- * StandardStatus, City and the Media fields are confirmed in AMP's docs; the
- * rest are read defensively and should be checked against $metadata once the
- * token is in place.
+ * Field names checked against the live feed on 2026-11-19: every field read below exists except
+ * Latitude/Longitude (absent, so those stay null). The feed has no sale price, so "sold over asking"
+ * is PK's own mark. Photos come in several sizes; "Large" is 1080 px on the short side (~170 KB).
+ * Agent names are not unique (another agent shares PK's surname), so listings are only ever added by
+ * MLS® number, never matched by name.
  */
 const BASE = "https://query.ampre.ca/odata";
 
