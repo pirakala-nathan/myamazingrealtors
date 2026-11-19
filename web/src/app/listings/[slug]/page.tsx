@@ -13,7 +13,7 @@ import { OverAskingBadge, isOverAsking } from "@/components/listings/status-badg
 
 export async function generateMetadata({ params }: PageProps<"/listings/[slug]">): Promise<Metadata> {
   const listing = await getListingBySlug((await params).slug);
-  if (!listing) return { title: "Listing not found" };
+  if (!listing || listing.status === "off-market") return { title: "Listing not found" };
   const title = `${listingTitle(listing)} | ${statusLabel[listing.status]}`;
   return {
     title,
@@ -35,7 +35,8 @@ function Fact({ label, value }: { label: string; value: string | number | null }
 
 async function ListingDetail({ params }: { params: PageProps<"/listings/[slug]">["params"] }) {
   const listing = await getListingBySlug((await params).slug);
-  if (!listing) notFound();
+  // Off-market homes are never shown publicly (MLS® rules require delisted properties to come down).
+  if (!listing || listing.status === "off-market") notFound();
 
   const price = priceLine(listing);
   const [hero, ...rest] = listing.photos;
