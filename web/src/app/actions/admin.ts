@@ -104,6 +104,27 @@ export async function refreshListing(mlsNumber: string) {
   }
 }
 
+/**
+ * Marks an MLS®-added sold or leased listing as sold/leased over asking (or clears it).
+ * PropTx has no sale price, so this is PK's call; it shows the special badge on the site.
+ */
+export async function setOverAsking(mlsNumber: string, overAsking: boolean): Promise<{ error?: string }> {
+  await requireAdmin();
+  const existing = await findListing(mlsNumber);
+  if (!existing) return { error: "That listing is no longer on the site. Reload the page." };
+  if (existing.status !== "sold" && existing.status !== "leased") {
+    return { error: "Only sold or leased listings can be marked over asking." };
+  }
+  try {
+    await saveListing({ ...existing, soldOverAsking: overAsking });
+  } catch (error) {
+    console.error("[admin] saving over-asking failed", error);
+    return { error: "That change couldn’t be saved. Please try again." };
+  }
+  updateTag(LISTINGS_TAG);
+  return {};
+}
+
 export async function removeListing(mlsNumber: string) {
   await requireAdmin();
   await deleteListing(mlsNumber);

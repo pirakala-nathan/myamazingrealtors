@@ -95,7 +95,13 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
                     {l.source === "manual" && " · added by hand"}
                   </span>
                 </div>
-                <RowActions mlsNumber={l.mlsNumber} title={listingTitle(l)} manual={l.source === "manual"} />
+                <RowActions
+                  mlsNumber={l.mlsNumber}
+                  title={listingTitle(l)}
+                  manual={l.source === "manual"}
+                  sale={l.status === "sold" || l.status === "leased" ? l.status : null}
+                  overAsking={Boolean(l.soldOverAsking)}
+                />
               </li>
             ))}
           </ul>
