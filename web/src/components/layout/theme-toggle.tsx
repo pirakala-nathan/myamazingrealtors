@@ -13,16 +13,20 @@ const subscribe = (onChange: () => void) => {
 };
 const getTheme = (): Theme => (document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
 
+/** Matches the transition length in .theme-gliding (globals.css). */
+const GLIDE_MS = 450;
+let glideTimer = 0;
+
 /**
- * Light/dark switch. The new theme sweeps across the page in a growing circle that starts at the
- * button (View Transitions API); browsers without it get a short colour fade, and reduced-motion
- * visitors get an instant switch. The choice is remembered on this device.
+ * Light/dark switch. Every colour on the page glides to its new shade at once (backgrounds, text,
+ * borders, icons) and the header logo cross-fades; reduced-motion visitors get an instant switch.
+ * The choice is remembered on this device.
  */
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const theme = useSyncExternalStore(subscribe, getTheme, () => "light" as Theme);
   const dark = theme === "dark";
 
-  const toggle = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const toggle = () => {
     const next: Theme = dark ? "light" : "dark";
     const root = document.documentElement;
     const apply = () => {
@@ -34,27 +38,13 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return apply();
 
-    if (!("startViewTransition" in document)) {
-      root.classList.add("theme-fading");
-      apply();
-      window.setTimeout(() => root.classList.remove("theme-fading"), 500);
-      return;
-    }
-
-    // Circle grows from the middle of the button to the farthest corner of the screen.
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-    const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
-    const transition = document.startViewTransition(apply);
-    transition.ready
-      .then(() => {
-        root.animate(
-          { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
-          { duration: 650, easing: "cubic-bezier(0.4, 0, 0.2, 1)", pseudoElement: "::view-transition-new(root)" },
-        );
-      })
-      .catch(() => {});
+    // Colour glide: for a moment every element transitions its colours (see .theme-gliding in globals.css),
+    // then the theme changes, so the whole page shifts to its new shades together, like a change of light.
+    window.clearTimeout(glideTimer);
+    root.classList.add("theme-gliding");
+    void root.offsetWidth; // make sure the transitions are in place before the colours change
+    apply();
+    glideTimer = window.setTimeout(() => root.classList.remove("theme-gliding"), GLIDE_MS + 100);
   };
 
   return (

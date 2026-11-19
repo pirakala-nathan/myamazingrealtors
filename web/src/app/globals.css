@@ -88,30 +88,33 @@
   --color-logo-grey: #6e6f72;
 }
 
-/* Things that differ by theme beyond colours: the header logo has a light and a dark version. */
+/*
+ * The header logo has a navy and a white version, stacked; the one for the other theme fades out
+ * (and cross-fades during a switch).
+ */
+.theme-light-only,
+.theme-dark-only {
+  transition: opacity 0.45s ease;
+}
 [data-theme="dark"] .theme-light-only,
 :root:not([data-theme="dark"]) .theme-dark-only {
-  display: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /*
- * Switching theme: the new theme sweeps across from the switch in a growing circle (View Transitions,
- * animated in theme-toggle.tsx). Browsers without View Transitions get a short colour fade instead.
+ * Switching theme, "colour glide": while .theme-gliding is on <html> (added by theme-toggle.tsx for the
+ * length of the switch), every colour on the page eases to its new shade together, like a change of
+ * light. Only colour properties move; layout and other animations are untouched.
  */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-.theme-fading,
-.theme-fading *,
-.theme-fading *::before,
-.theme-fading *::after {
-  transition:
-    background-color 0.45s ease,
-    color 0.45s ease,
-    border-color 0.45s ease,
-    fill 0.45s ease !important;
+.theme-gliding,
+.theme-gliding *,
+.theme-gliding *::before,
+.theme-gliding *::after {
+  transition-property: background-color, color, border-color, outline-color, fill, stroke, box-shadow, opacity !important;
+  transition-duration: 0.45s !important;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition-delay: 0s !important;
 }
 
 @layer base {
