@@ -1,6 +1,6 @@
 import { isOverAsking } from "@/components/listings/status-badge";
 import { toFilterable, type Filterable } from "@/lib/listings/filters";
-import { statusLabel, type Listing } from "@/lib/listings/types";
+import { isPublic, statusLabel, type Listing } from "@/lib/listings/types";
 
 /** What the search panel needs to show live results in the browser (no sold prices). */
 export type SearchableListing = Filterable & {
@@ -15,7 +15,7 @@ export type SearchableListing = Filterable & {
 
 export function searchableListings(all: Listing[]): SearchableListing[] {
   return [...all]
-    .filter((l) => l.status !== "off-market")
+    .filter(isPublic)
     .sort((a, b) => b.addedAt.localeCompare(a.addedAt))
     .map((l) => {
       const over = isOverAsking(l);

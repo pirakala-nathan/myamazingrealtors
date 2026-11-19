@@ -47,6 +47,13 @@ export const statusLabel: Record<ListingStatus, string> = {
   "off-market": "Off market",
 };
 
+/**
+ * Whether a listing may appear on the public site. Off-market homes PK entered by hand can be shown (under the
+ * "Off market" option); off-market homes from the PropTx feed can't, because MLS® feed rules require delisted
+ * properties to be removed from public display.
+ */
+export const isPublic = (l: Pick<Listing, "status" | "source">) => l.status !== "off-market" || l.source === "manual";
+
 export function listingTitle(l: Pick<Listing, "street" | "city">) {
   return l.street ? `${l.street}, ${l.city}` : l.city;
 }

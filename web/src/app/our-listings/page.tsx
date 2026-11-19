@@ -9,7 +9,7 @@ import { SearchPanel } from "@/components/listings/search-panel";
 import { searchableListings } from "@/components/listings/searchable";
 import { describeFilters, hasFilters, locationOptions, matchesFilters, parseFilters, toFilterable, typeOptions } from "@/lib/listings/filters";
 import { getListings } from "@/lib/listings/store";
-import type { Listing } from "@/lib/listings/types";
+import { isPublic, type Listing } from "@/lib/listings/types";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -34,9 +34,13 @@ async function Results({ searchParams }: { searchParams: PageProps<"/our-listing
   const filters = parseFilters(await searchParams);
   const all = await getListings();
   const filtering = hasFilters(filters);
-  const listings = filtering ? all.filter((l) => matchesFilters(toFilterable(l), filters)) : all;
+  const shown = all.filter(isPublic);
+  const listings = filtering ? shown.filter((l) => matchesFilters(toFilterable(l), filters)) : shown;
   const current = listings.filter((l) => l.status === "active" || l.status === "pending");
   const past = listings.filter((l) => l.status === "sold" || l.status === "leased");
+  const offMarket = listings.filter((l) => l.status === "off-market");
+  const offMarketTotal = shown.filter((l) => l.status === "off-market").length;
+  const showingOffMarket = filters.show === "off-market";
 
   return (
     <>
@@ -59,7 +63,7 @@ async function Results({ searchParams }: { searchParams: PageProps<"/our-listing
         </p>
       )}
 
-      {filters.show === "sold" ? null : current.length > 0 ? (
+      {filters.show === "sold" || showingOffMarket ? null : current.length > 0 ? (
         <Grid listings={current} />
       ) : (
         <div className="flex flex-col items-start gap-4 border border-cloud-300 bg-mist-50 p-8 md:p-10">
@@ -74,11 +78,37 @@ async function Results({ searchParams }: { searchParams: PageProps<"/our-listing
         </div>
       )}
 
-      {filters.show !== "for-sale" && past.length > 0 && (
+      {filters.show !== "for-sale" && !showingOffMarket && past.length > 0 && (
         <div className="flex flex-col gap-8">
           <h2 className="font-display text-[clamp(2.25rem,4vw,3.25rem)] font-semibold leading-none">Recently sold.</h2>
           <Grid listings={past} />
         </div>
+      )}
+
+      {showingOffMarket &&
+        (offMarket.length > 0 ? (
+          <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-3">
+              <h2 className="font-display text-[clamp(2.25rem,4vw,3.25rem)] font-semibold leading-none">Off market.</h2>
+              <p className="max-w-2xl text-body">
+                Homes that are no longer listed for sale. Interested in one of them, or something like it? Ask{" "}
+                {site.agent.firstName}, who may be able to reach the owner or find you something similar.
+              </p>
+            </div>
+            <Grid listings={offMarket} />
+          </div>
+        ) : (
+          <p className="border border-cloud-300 bg-mist-50 p-8 text-body">No off-market homes match that search.</p>
+        ))}
+
+      {/* A way in to off-market homes, which the main list leaves out. */}
+      {!showingOffMarket && offMarketTotal > 0 && (
+        <Link
+          href="/our-listings?show=off-market"
+          className="self-start border-b-2 border-aqua-400 pb-1 font-extrabold text-ink hover:text-aqua-700"
+        >
+          See {offMarketTotal} off-market home{offMarketTotal === 1 ? "" : "s"} →
+        </Link>
       )}
     </>
   );

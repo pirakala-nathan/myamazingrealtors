@@ -7,13 +7,13 @@ import { Suspense } from "react";
 import { ButtonLink } from "@/components/ui/button-link";
 import { factsLine, isRemote, priceLine } from "@/components/listings/listing-card";
 import { getListingBySlug } from "@/lib/listings/store";
-import { listingTitle, statusLabel } from "@/lib/listings/types";
+import { isPublic, listingTitle, statusLabel } from "@/lib/listings/types";
 import { site } from "@/lib/site";
 import { OverAskingBadge, isOverAsking } from "@/components/listings/status-badge";
 
 export async function generateMetadata({ params }: PageProps<"/listings/[slug]">): Promise<Metadata> {
   const listing = await getListingBySlug((await params).slug);
-  if (!listing) return { title: "Listing not found" };
+  if (!listing || !isPublic(listing)) return { title: "Listing not found" };
   const title = `${listingTitle(listing)} | ${statusLabel[listing.status]}`;
   return {
     title,
@@ -35,7 +35,8 @@ function Fact({ label, value }: { label: string; value: string | number | null }
 
 async function ListingDetail({ params }: { params: PageProps<"/listings/[slug]">["params"] }) {
   const listing = await getListingBySlug((await params).slug);
-  if (!listing) notFound();
+  // Off-market homes from the PropTx feed must come down (MLS® rules); hand-entered ones can stay.
+  if (!listing || !isPublic(listing)) notFound();
 
   const price = priceLine(listing);
   const [hero, ...rest] = listing.photos;

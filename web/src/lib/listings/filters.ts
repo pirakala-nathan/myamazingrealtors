@@ -12,6 +12,7 @@ export const SHOW_OPTIONS = [
   { value: "", label: "All listings" },
   { value: "for-sale", label: "For sale" },
   { value: "sold", label: "Sold & leased" },
+  { value: "off-market", label: "Off market" },
 ] as const;
 
 export const PRICE_RANGES = [
@@ -40,10 +41,17 @@ export function bedroomCount(bedrooms: string | null) {
 /** Shown in the type menu until PK's own listings provide their property types. */
 export const DEFAULT_TYPES = ["Detached", "Semi-Detached", "Townhouse", "Condo"];
 
-export type ListingFilters = { q: string; show: "" | "for-sale" | "sold"; type: string; price: string; beds: string };
+export type ListingFilters = {
+  q: string;
+  /** "" is everything currently for sale or sold; off-market homes only appear when asked for. */
+  show: "" | "for-sale" | "sold" | "off-market";
+  type: string;
+  price: string;
+  beds: string;
+};
 
 export type Filterable = {
-  group: "for-sale" | "sold" | "other";
+  group: "for-sale" | "sold" | "off-market";
   type: string | null;
   beds: number | null;
   /** Asking price, for homes for sale only. */
@@ -62,7 +70,7 @@ export function parseFilters(params: Record<string, string | string[] | undefine
   const beds = one(params.beds);
   return {
     q: one(params.q).slice(0, 80),
-    show: show === "for-sale" || show === "sold" ? show : "",
+    show: show === "for-sale" || show === "sold" || show === "off-market" ? show : "",
     type: one(params.type).slice(0, 60),
     price: PRICE_RANGES.some((r) => r.value === price) ? price : "",
     beds: BED_OPTIONS.some((r) => r.value === beds) ? beds : "",
@@ -72,7 +80,7 @@ export function parseFilters(params: Record<string, string | string[] | undefine
 export const hasFilters = (f: ListingFilters) => Boolean(f.q || f.show || f.type || f.price || f.beds);
 
 export function toFilterable(l: Listing): Filterable {
-  const group = l.status === "active" || l.status === "pending" ? "for-sale" : l.status === "sold" || l.status === "leased" ? "sold" : "other";
+  const group = l.status === "active" || l.status === "pending" ? "for-sale" : l.status === "sold" || l.status === "leased" ? "sold" : "off-market";
   return {
     group,
     type: l.propertyType,
@@ -83,7 +91,7 @@ export function toFilterable(l: Listing): Filterable {
 }
 
 export function matchesFilters(l: Filterable, f: ListingFilters) {
-  if (f.show && l.group !== f.show) return false;
+  if (f.show ? l.group !== f.show : l.group === "off-market") return false;
   if (f.type && (l.type ?? "").toLowerCase() !== f.type.toLowerCase()) return false;
   if (f.beds && (l.beds == null || l.beds < Number(f.beds))) return false;
   if (f.price) {
