@@ -322,12 +322,7 @@ export function SearchPanel({
     <div ref={rootRef} className="hero-rise relative" style={{ animationDelay: "var(--hero-delay, 0ms)" }}>
       {/* Tabs sitting on top of the panel. */}
       <div className="flex items-end justify-between gap-4">
-        {/* On narrow phones the tabs scroll sideways rather than squeezing. */}
-        <div
-          role="tablist"
-          aria-label="Which listings"
-          className="flex min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
+        <div role="tablist" aria-label="Which listings" className="flex">
           {SHOW_OPTIONS.map((o) => {
             const selected = filters.show === o.value;
             return (
@@ -337,7 +332,7 @@ export function SearchPanel({
                 role="tab"
                 aria-selected={selected}
                 onClick={() => set({ show: o.value })}
-                className={`relative shrink-0 whitespace-nowrap px-3 py-3 text-[13px] font-extrabold transition-colors sm:px-6 sm:text-sm ${
+                className={`relative px-4 py-3 text-sm font-extrabold transition-colors sm:px-6 ${
                   selected ? "bg-white text-ink" : "bg-navy-900/[0.06] text-body hover:bg-white/70 hover:text-ink"
                 }`}
               >
