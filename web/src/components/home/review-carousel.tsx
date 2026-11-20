@@ -96,14 +96,15 @@ export function ReviewCarousel({
         const dx = e.changedTouches[0].clientX - start;
         if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
       }}
-      className="grid items-center gap-10 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)] md:gap-14 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:gap-20"
+      // Phone: one card, the navy house band as its header. Wider screens: house tile beside the review.
+      className="grid border border-cloud-300 bg-mist-50 md:items-center md:gap-14 md:border-0 md:bg-transparent md:grid-cols-[minmax(0,260px)_minmax(0,1fr)] md:gap-14 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:gap-20"
     >
       {/* The house: cyan hands for the roof, four windows that light up as the timer. */}
-      <div className="flex aspect-[2/1] items-center justify-center bg-navy-900 px-10 md:aspect-square md:px-8">
+      <div className="flex items-center justify-center border-b border-cloud-300 bg-navy-900 px-10 py-8 md:aspect-square md:border-0 md:px-8 md:py-0">
         <svg
           viewBox={HOUSE_VIEWBOX}
           aria-hidden="true"
-          className="w-full max-w-64 overflow-visible"
+          className="w-40 overflow-visible sm:w-48 md:w-full md:max-w-64"
         >
           {HOUSE_ROOF.map((d) => (
             <path key={d} d={d} className="fill-aqua-400" />
@@ -134,7 +135,7 @@ export function ReviewCarousel({
         </svg>
       </div>
 
-      <div className="flex min-w-0 flex-col gap-8">
+      <div className="flex min-w-0 flex-col gap-8 p-6 pt-7 sm:p-8 md:p-0">
         {/* All reviews share one grid cell, so they cross-fade in place. */}
         <div className="grid" aria-live={running ? "off" : "polite"}>
           {reviews.map((r, i) => {
