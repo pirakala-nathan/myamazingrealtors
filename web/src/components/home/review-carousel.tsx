@@ -96,15 +96,15 @@ export function ReviewCarousel({
         const dx = e.changedTouches[0].clientX - start;
         if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
       }}
-      // Phone: one card, the navy house band as its header. Wider screens: house tile beside the review.
-      className="grid border border-cloud-300 bg-mist-50 md:items-center md:gap-14 md:border-0 md:bg-transparent md:grid-cols-[minmax(0,260px)_minmax(0,1fr)] md:gap-14 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:gap-20"
+      // One card: the navy house panel is its header on phones and its left side on wider screens.
+      className="relative grid border border-cloud-300 bg-mist-50 shadow-[0_40px_80px_-50px_rgba(10,29,40,0.45)] md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]"
     >
       {/* The house: cyan hands for the roof, four windows that light up as the timer. */}
-      <div className="flex items-center justify-center border-b border-cloud-300 bg-navy-900 px-10 py-8 md:aspect-square md:border-0 md:px-8 md:py-0">
+      <div className="relative flex items-center justify-center border-b-[3px] border-aqua-400 bg-navy-900 px-10 py-8 md:border-b-0 md:border-r-[3px] md:px-10 md:py-14">
         <svg
           viewBox={HOUSE_VIEWBOX}
           aria-hidden="true"
-          className="w-40 overflow-visible sm:w-48 md:w-full md:max-w-64"
+          className="w-40 overflow-visible sm:w-48 md:w-full md:max-w-60"
         >
           {HOUSE_ROOF.map((d) => (
             <path key={d} d={d} className="fill-aqua-400" />
@@ -135,9 +135,16 @@ export function ReviewCarousel({
         </svg>
       </div>
 
-      <div className="flex min-w-0 flex-col gap-8 p-6 pt-7 sm:p-8 md:p-0">
+      <div className="relative flex min-w-0 flex-col justify-center gap-8 p-6 pt-7 sm:p-8 md:p-10 lg:px-14 lg:py-12">
+        {/* A large quotation mark, set faintly in the corner. */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute right-6 top-2 select-none font-display text-[9rem] leading-none text-aqua-400/15 md:right-10 md:top-4 md:text-[12rem]"
+        >
+          ”
+        </span>
         {/* All reviews share one grid cell, so they cross-fade in place. */}
-        <div className="grid" aria-live={running ? "off" : "polite"}>
+        <div className="relative grid" aria-live={running ? "off" : "polite"}>
           {reviews.map((r, i) => {
             const on = i === active;
             return (
@@ -207,7 +214,7 @@ export function ReviewCarousel({
         </div>
 
         {count > 1 && (
-          <div className="flex items-center gap-5">
+          <div className="relative flex items-center gap-5">
             <div className="flex gap-2">
               <button
                 type="button"
