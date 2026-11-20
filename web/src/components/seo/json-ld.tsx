@@ -10,6 +10,17 @@ export function JsonLd({ data }: { data: Record<string, unknown> }) {
   );
 }
 
+/** Tells Google the site's name, which it shows above the title in search results. */
+export function websiteSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: site.name,
+    alternateName: [`${site.agent.name}, Realtor®`, "MyAmazingRealtors.com"],
+    url: `${new URL(site.url).origin}/`,
+  };
+}
+
 export function realEstateAgentSchema() {
   const sameAs = [site.social.instagram, site.social.facebook, site.social.youtube].filter(Boolean);
   return {
@@ -18,6 +29,7 @@ export function realEstateAgentSchema() {
     name: `${site.agent.name} — ${site.name}`,
     url: site.url,
     image: new URL(site.agent.photo, site.url).toString(),
+    logo: new URL("/icons/icon-512.png", site.url).toString(),
     telephone: site.agent.phone,
     email: site.agent.email,
     address: {

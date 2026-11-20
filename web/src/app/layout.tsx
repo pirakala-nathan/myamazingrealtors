@@ -6,7 +6,7 @@ import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { MobileActionBar } from "@/components/layout/mobile-action-bar";
-import { JsonLd, realEstateAgentSchema } from "@/components/seo/json-ld";
+import { JsonLd, realEstateAgentSchema, websiteSchema } from "@/components/seo/json-ld";
 import { Intro } from "@/components/layout/intro";
 import { ThemeScript } from "@/components/layout/theme-script";
 
@@ -27,7 +27,8 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.agent.name}, Realtor® | Pickering, Ajax, Whitby & East GTA Real Estate`,
+    // Under 60 characters so Google shows it in full; the site name shows separately above it.
+    default: `${site.agent.name}, Realtor® | Pickering, Ajax & Whitby`,
     template: `%s | ${site.name}`,
   },
   description: site.description,
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </main>
         <SiteFooter />
         <MobileActionBar />
+        <JsonLd data={websiteSchema()} />
         <JsonLd data={realEstateAgentSchema()} />
       </body>
     </html>
