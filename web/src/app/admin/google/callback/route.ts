@@ -3,7 +3,7 @@ import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
-import { STATE_COOKIE, discoverLocation, exchangeCode, saveConnection } from "@/lib/google-business";
+import { STATE_COOKIE, callbackUrl, discoverLocation, exchangeCode, saveConnection } from "@/lib/google-business";
 import { GOOGLE_REVIEWS_TAG } from "@/lib/google-reviews";
 
 const back = (request: NextRequest, result: string) =>
@@ -26,8 +26,7 @@ export async function GET(request: NextRequest) {
   if (!code) return back(request, "error");
 
   try {
-    const redirectUri = new URL("/admin/google/callback", request.nextUrl.origin).toString();
-    const tokens = await exchangeCode(code, redirectUri);
+    const tokens = await exchangeCode(code, callbackUrl(request.nextUrl.origin));
     if (!tokens.refresh_token) return back(request, "error-no-refresh-token");
     const found = await discoverLocation(tokens.access_token!);
     await saveConnection({

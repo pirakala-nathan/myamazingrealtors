@@ -78,6 +78,22 @@ export async function clearConnection() {
 // ---------------------------------------------------------------------------
 // OAuth
 
+/**
+ * Where Google sends PK back after consent. It must exactly match a redirect URI on the OAuth client, so the
+ * live site always uses its canonical address (site.url), whichever address the admin page was opened on;
+ * local development uses the dev server's own address (http://localhost:3000).
+ */
+export function callbackUrl(requestOrigin: string) {
+  const base = process.env.NODE_ENV === "production" ? site.url : requestOrigin;
+  return new URL("/admin/google/callback", base).toString();
+}
+
+/** On the live site, the canonical origin when the request came in on another address (Netlify's, no www). */
+export function wrongHost(requestOrigin: string) {
+  const canonical = new URL(site.url).origin;
+  return process.env.NODE_ENV === "production" && requestOrigin !== canonical ? canonical : null;
+}
+
 export function authUrl(state: string, redirectUri: string) {
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_OAUTH_CLIENT_ID!,
