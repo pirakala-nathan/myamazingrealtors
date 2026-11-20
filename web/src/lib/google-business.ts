@@ -83,9 +83,14 @@ export async function clearConnection() {
  * live site always uses its canonical address (site.url), whichever address the admin page was opened on;
  * local development uses the dev server's own address (http://localhost:3000).
  */
-export function callbackUrl(requestOrigin: string) {
+/** A URL on this site. On the live site Netlify hands the server its internal address, so use the real one. */
+export function siteUrl(path: string, requestOrigin: string) {
   const base = process.env.NODE_ENV === "production" ? site.url : requestOrigin;
-  return new URL("/admin/google/callback", base).toString();
+  return new URL(path, base);
+}
+
+export function callbackUrl(requestOrigin: string) {
+  return siteUrl("/admin/google/callback", requestOrigin).toString();
 }
 
 export function authUrl(state: string, redirectUri: string) {

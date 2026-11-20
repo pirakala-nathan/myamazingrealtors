@@ -3,15 +3,15 @@ import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
-import { STATE_COOKIE, callbackUrl, discoverLocation, exchangeCode, saveConnection } from "@/lib/google-business";
+import { STATE_COOKIE, callbackUrl, discoverLocation, exchangeCode, saveConnection, siteUrl } from "@/lib/google-business";
 import { GOOGLE_REVIEWS_TAG } from "@/lib/google-reviews";
 
 const back = (request: NextRequest, result: string) =>
-  NextResponse.redirect(new URL(`/admin?google=${result}`, request.url));
+  NextResponse.redirect(siteUrl(`/admin?google=${result}`, request.nextUrl.origin));
 
 /** Google sends PK back here after consent: save the refresh token and find the business location. */
 export async function GET(request: NextRequest) {
-  if (!(await isAdmin())) return NextResponse.redirect(new URL("/admin/login", request.url));
+  if (!(await isAdmin())) return NextResponse.redirect(siteUrl("/admin/login", request.nextUrl.origin));
 
   const jar = await cookies();
   const expected = jar.get(STATE_COOKIE)?.value ?? "";
