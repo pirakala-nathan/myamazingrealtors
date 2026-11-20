@@ -340,7 +340,7 @@ export function ListingsCarousel({ listings: original }: { listings: CarouselLis
         aria-label="Latest listings"
         onPointerEnter={(e) => e.pointerType === "mouse" && setHovering(true)}
         onPointerLeave={() => setHovering(false)}
-        className="flex snap-x snap-mandatory scroll-pl-4 gap-4 overflow-x-auto px-4 py-4 [-ms-overflow-style:none] [scrollbar-width:none] md:scroll-pl-6 md:gap-5 md:px-6 xl:scroll-pl-[calc((100%-80rem)/2+1.5rem)] xl:px-[calc((100%-80rem)/2+1.5rem)] [&::-webkit-scrollbar]:hidden"
+        className="flex justify-center-safe snap-x snap-mandatory scroll-pl-4 gap-4 overflow-x-auto px-4 py-4 [-ms-overflow-style:none] [scrollbar-width:none] md:scroll-pl-6 md:gap-5 md:px-6 xl:scroll-pl-[calc((100%-80rem)/2+1.5rem)] xl:px-[calc((100%-80rem)/2+1.5rem)] [&::-webkit-scrollbar]:hidden"
       >
         {listings.map((l, i) => (
           <li
