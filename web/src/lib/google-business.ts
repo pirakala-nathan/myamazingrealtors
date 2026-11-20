@@ -88,12 +88,6 @@ export function callbackUrl(requestOrigin: string) {
   return new URL("/admin/google/callback", base).toString();
 }
 
-/** On the live site, the canonical origin when the request came in on another address (Netlify's, no www). */
-export function wrongHost(requestOrigin: string) {
-  const canonical = new URL(site.url).origin;
-  return process.env.NODE_ENV === "production" && requestOrigin !== canonical ? canonical : null;
-}
-
 export function authUrl(state: string, redirectUri: string) {
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_OAUTH_CLIENT_ID!,
