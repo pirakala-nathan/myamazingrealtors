@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useShuffled } from "@/lib/use-shuffled";
 import { useDragScroll, usePause } from "./use-pause";
 
 export type ReviewCard = {
@@ -33,7 +34,8 @@ function Stars({ rating }: { rating: number }) {
  * Swipe or drag, use the arrows, or tap a dimmed card to jump to it. Pauses briefly after a tap or drag,
  * while off screen or in a hidden tab; reduced-motion visitors get a still row they move themselves.
  */
-export function ReviewCarousel({ reviews }: { reviews: ReviewCard[] }) {
+export function ReviewCarousel({ reviews: original }: { reviews: ReviewCard[] }) {
+  const reviews = useShuffled(original);
   const trackRef = useRef<HTMLUListElement>(null);
   const [active, setActive] = useState(0);
   const [inView, setInView] = useState(false);

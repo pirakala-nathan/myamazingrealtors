@@ -181,8 +181,8 @@ export async function Testimonials() {
         <p className="mt-6 flex flex-col gap-2 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
           <span>
             {google.source === "business-profile"
-              ? "Source: Google Maps. Newest reviews first."
-              : "Source: Google Maps. Showing Google’s most relevant reviews, newest first. Reviews aren’t verified by Google."}
+              ? "Source: Google Maps. Shown in a different order on every visit."
+              : "Source: Google Maps. Showing Google’s most relevant reviews, in a different order on every visit. Reviews aren’t verified by Google."}
           </span>
           {google.mapsUri && (
             <a href={google.mapsUri} target="_blank" rel="noopener noreferrer" className="font-bold text-aqua-700 hover:text-ink">

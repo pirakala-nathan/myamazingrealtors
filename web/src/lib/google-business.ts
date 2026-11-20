@@ -179,7 +179,7 @@ export async function fetchBusinessReviews(): Promise<GoogleReviews | null> {
 
   const token = await accessToken(connection.refreshToken);
   const data = await api<{ reviews?: ApiReview[]; averageRating?: number; totalReviewCount?: number }>(
-    `https://mybusiness.googleapis.com/v4/${connection.account}/${connection.location}/reviews?pageSize=30&orderBy=${encodeURIComponent("updateTime desc")}`,
+    `https://mybusiness.googleapis.com/v4/${connection.account}/${connection.location}/reviews?pageSize=50&orderBy=${encodeURIComponent("updateTime desc")}`,
     token,
   );
 
