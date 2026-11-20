@@ -481,6 +481,20 @@
   to { transform: scaleX(1); }
 }
 
+/* Reviews: the house mark's windows light one by one as the timer (src/components/home/review-carousel.tsx). */
+.house-window {
+  fill: #ffffff;
+  opacity: 0;
+  animation-name: house-window;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+@keyframes house-window {
+  0% { opacity: 0; }
+  35% { opacity: 1; filter: drop-shadow(0 0 2px rgb(255 255 255 / 0.9)); }
+  100% { opacity: 1; filter: drop-shadow(0 0 1px rgb(255 255 255 / 0.5)); }
+}
+
 /* Sections that rise into view the first time they scroll on screen (src/components/home/reveal.tsx). */
 .reveal > * {
   opacity: 0;
