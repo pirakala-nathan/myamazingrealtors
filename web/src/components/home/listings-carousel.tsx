@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { HouseMark } from "@/components/ui/house-mark";
+import { useShuffled } from "@/lib/use-shuffled";
 import { useDragScroll } from "./use-pause";
 
 export type CarouselListing = {
@@ -249,7 +250,8 @@ function ListingDialog({ l, onClose }: { l: CarouselListing; onClose: () => void
  * (or tapping the card on a phone or iPad) opens the full details with a photo gallery.
  * Swipe, drag or use the arrows; pauses off screen and for reduced-motion visitors.
  */
-export function ListingsCarousel({ listings }: { listings: CarouselListing[] }) {
+export function ListingsCarousel({ listings: original }: { listings: CarouselListing[] }) {
+  const listings = useShuffled(original);
   const trackRef = useRef<HTMLUListElement>(null);
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState<number | null>(null);

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { HouseLoader } from "@/components/ui/house-loader";
+import { useShuffled } from "@/lib/use-shuffled";
 import { useDragScroll, usePause } from "./use-pause";
 
 /** Loader over a video that is buffering. It fades in after a short delay, so quick starts never flash it. */
@@ -50,7 +51,8 @@ const FALLBACK_ADVANCE_MS = 15_000; // if a video can't play, move on anyway
  * Clicking the playing reel opens a full-screen player with sound.
  * Pauses on hover, focus or touch and when the tab is hidden; no auto-play for reduced motion.
  */
-export function ReelCarousel({ reels }: { reels: ReelSlide[] }) {
+export function ReelCarousel({ reels: original }: { reels: ReelSlide[] }) {
+  const reels = useShuffled(original);
   const trackRef = useRef<HTMLUListElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const [active, setActive] = useState(0);
