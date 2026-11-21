@@ -459,12 +459,13 @@ export function ReelCarousel({ reels: original }: { reels: ReelSlide[] }) {
   }, [hdSrc, currentId]);
 
   return (
-    <div {...pauseHandlers}>
+    // On very wide screens the row spreads at most 10rem past the content on each side, fading out there.
+    <div {...pauseHandlers} className="mx-auto max-w-[100rem]">
       <ul
         ref={trackRef}
         aria-label="Reels"
         // Side padding lines the first reel up with the heading above (same as .container-site).
-        className="flex snap-x snap-mandatory scroll-pl-4 gap-4 overflow-x-auto px-4 py-4 [-ms-overflow-style:none] [scrollbar-width:none] md:scroll-pl-6 md:gap-5 md:px-6 xl:scroll-pl-[calc((100%-80rem)/2+1.5rem)] xl:px-[calc((100%-80rem)/2+1.5rem)] [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x snap-mandatory scroll-pl-4 gap-4 overflow-x-auto px-4 py-4 [-ms-overflow-style:none] [scrollbar-width:none] md:scroll-pl-6 md:gap-5 md:px-6 xl:scroll-pl-[calc((100%-80rem)/2+1.5rem)] xl:px-[calc((100%-80rem)/2+1.5rem)] min-[100rem]:[mask-image:linear-gradient(to_right,transparent,#000_6rem,#000_calc(100%-6rem),transparent)] [&::-webkit-scrollbar]:hidden"
       >
         {reels.map((reel, i) => {
           // The reel that's playing: the one pointed at with a mouse, otherwise the row's current one.

@@ -334,13 +334,14 @@ export function ListingsCarousel({ listings: original }: { listings: CarouselLis
     "flex size-12 items-center justify-center border-[1.5px] border-ink text-ink transition-colors hover:bg-ink hover:text-mist-100";
 
   return (
-    <div>
+    // On very wide screens the row spreads at most 10rem past the content on each side, fading out there.
+    <div className="mx-auto max-w-[100rem]">
       <ul
         ref={trackRef}
         aria-label="Latest listings"
         onPointerEnter={(e) => e.pointerType === "mouse" && setHovering(true)}
         onPointerLeave={() => setHovering(false)}
-        className="flex justify-center-safe snap-x snap-mandatory scroll-pl-4 gap-4 overflow-x-auto px-4 py-4 [-ms-overflow-style:none] [scrollbar-width:none] md:scroll-pl-6 md:gap-5 md:px-6 xl:scroll-pl-[calc((100%-80rem)/2+1.5rem)] xl:px-[calc((100%-80rem)/2+1.5rem)] [&::-webkit-scrollbar]:hidden"
+        className="flex justify-center-safe snap-x snap-mandatory scroll-pl-4 gap-4 overflow-x-auto px-4 py-4 [-ms-overflow-style:none] [scrollbar-width:none] md:scroll-pl-6 md:gap-5 md:px-6 xl:scroll-pl-[calc((100%-80rem)/2+1.5rem)] xl:px-[calc((100%-80rem)/2+1.5rem)] min-[100rem]:[mask-image:linear-gradient(to_right,transparent,#000_6rem,#000_calc(100%-6rem),transparent)] [&::-webkit-scrollbar]:hidden"
       >
         {listings.map((l, i) => (
           <li
