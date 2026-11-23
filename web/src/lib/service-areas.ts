@@ -34,6 +34,9 @@ const FILTERS: Record<string, string> = {
   "richmond-hill": city("Richmond Hill"),
   stouffville: city("Whitchurch-Stouffville"),
   uxbridge: city("Uxbridge"),
+  vaughan: city("Vaughan"),
+  brampton: city("Brampton"),
+  mississauga: city("Mississauga"),
 };
 
 const FOR_SALE =
@@ -42,18 +45,35 @@ const FOR_SALE =
 
 async function countForSale(filter: string, token: string): Promise<number | null> {
   const url = `https://query.ampre.ca/odata/Property?$top=0&$count=true&$filter=${encodeURIComponent(`${FOR_SALE} and (${filter})`)}`;
-  try {
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-      cache: "no-store",
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!res.ok) return null;
-    const count = ((await res.json()) as { "@odata.count"?: unknown })["@odata.count"];
-    return typeof count === "number" ? count : null;
-  } catch {
-    return null;
+  // One retry after a pause: the feed sometimes throttles a burst of requests.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt) await new Promise((r) => setTimeout(r, 1500));
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+        cache: "no-store",
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!res.ok) continue;
+      const count = ((await res.json()) as { "@odata.count"?: unknown })["@odata.count"];
+      if (typeof count === "number") return count;
+    } catch {
+      // Timed out or network error: try once more.
+    }
   }
+  return null;
+}
+
+/** Runs the counts a few at a time rather than all at once. */
+async function countAll(token: string) {
+  const entries = Object.entries(FILTERS);
+  const counts = new Map<string, number | null>();
+  for (let i = 0; i < entries.length; i += 4) {
+    const batch = entries.slice(i, i + 4);
+    const results = await Promise.all(batch.map(([, f]) => countForSale(f, token)));
+    batch.forEach(([id], j) => counts.set(id, results[j]));
+  }
+  return counts;
 }
 
 /** Which service area a listing's city belongs to (PropTx gives "Toronto E09"; hand-entered ones say "Scarborough"). */
@@ -74,12 +94,8 @@ export async function getServiceAreaStats(): Promise<AreaStats[]> {
   cacheLife({ stale: 900, revalidate: 3600, expire: 24 * 3600 });
 
   const token = process.env.PROPTX_IDX_TOKEN;
-  const counts = new Map<string, number | null>();
+  const counts = token ? await countAll(token) : new Map<string, number | null>();
   if (token) {
-    const entries = await Promise.all(
-      Object.entries(FILTERS).map(async ([id, f]) => [id, await countForSale(f, token)] as const),
-    );
-    for (const [id, n] of entries) counts.set(id, n);
     const toronto = counts.get("toronto");
     const scar = counts.get("scarborough");
     counts.set("toronto", toronto != null && scar != null ? Math.max(0, toronto - scar) : null);

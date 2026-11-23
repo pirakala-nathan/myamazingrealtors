@@ -76,15 +76,26 @@ const areas = [
   ["richmond-hill", "Richmond Hill", land("RICHMOND HILL")],
   ["stouffville", "Stouffville", land("WHITCHURCH-STOUFFVILLE")],
   ["uxbridge", "Uxbridge", land("UXBRIDGE")],
+  ["vaughan", "Vaughan", land("VAUGHAN")],
+  ["brampton", "Brampton", land("BRAMPTON")],
+  ["mississauga", "Mississauga", land("MISSISSAUGA")],
 ];
-const context = ["SCUGOG", "VAUGHAN", "KING", "AURORA", "NEWMARKET", "BROCK", "EAST GWILLIMBURY", "PORT HOPE", "CAVAN MONAGHAN", "KAWARTHA LAKES", "MISSISSAUGA", "BRAMPTON"];
+const context = ["SCUGOG", "VAUGHAN", "KING", "AURORA", "NEWMARKET", "BROCK", "EAST GWILLIMBURY", "PORT HOPE", "CAVAN MONAGHAN", "KAWARTHA LAKES", "CALEDON", "HALTON HILLS", "MILTON", "OAKVILLE"];
+
+// Frame the service areas with a margin; the context outside it is clipped.
+const pts = areas.flatMap(([, , rs]) => rs.flat());
+const PAD = 30;
+const minX = Math.floor(Math.min(...pts.map((p) => p[0])) - PAD);
+const minY = Math.floor(Math.min(...pts.map((p) => p[1])) - PAD);
+const vw = Math.ceil(Math.max(...pts.map((p) => p[0])) + PAD) - minX;
+const vh = Math.ceil(Math.max(...pts.map((p) => p[1])) + PAD) - minY;
 
 const lines = [
   "// Generated from open data: Ontario Ministry of Natural Resources (Municipal Boundary, Lower and Single Tier),",
   "// Open Government Licence – Ontario; City of Toronto (Former Municipality Boundaries), Open Government Licence – Toronto.",
   "// Simplified and projected for display. Regenerate rather than editing by hand.",
   "",
-  `export const MAP_VIEWBOX = "10 100 980 780";`,
+  `export const MAP_VIEWBOX = "${minX} ${minY} ${vw} ${vh}";`,
   "",
   "export type MapArea = { id: string; name: string; d: string; label: [number, number] };",
   "",
@@ -98,4 +109,4 @@ const lines = [
   "",
 ];
 fs.writeFileSync(out, lines.join("\n"));
-console.log("viewBox", W, H, "bytes", fs.statSync(out).size);
+console.log("viewBox", minX, minY, vw, vh, "bytes", fs.statSync(out).size);

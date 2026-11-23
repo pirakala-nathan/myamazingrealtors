@@ -6,12 +6,13 @@ import type { MapArea } from "@/lib/content/service-areas-map";
 
 export type AreaView = MapArea & { forSale: number | null; deals: number; active: number };
 
-/** The order the outlines draw in: Durham first, east to west, then York and Toronto. */
+/** The order the outlines draw in: east to west, from Durham through York and Toronto to Peel. */
 const DRAW_ORDER = [
   "clarington", "oshawa", "whitby", "ajax", "pickering", "uxbridge",
   "scarborough", "markham", "stouffville", "richmond-hill", "toronto",
+  "vaughan", "brampton", "mississauga",
 ];
-const STEP_MS = 160;
+const STEP_MS = 140;
 
 const fmt = (n: number) => n.toLocaleString("en-CA");
 
@@ -172,7 +173,7 @@ export function ServiceAreaMap({
         <span className="absolute inset-x-0 top-0 h-[3px] bg-aqua-400" aria-hidden="true" />
         <p className="eyebrow text-aqua-400">{current ? "Service area" : "Where PK works"}</p>
         <h3 className="mt-2 font-display text-[clamp(2rem,3.4vw,2.75rem)] font-semibold leading-none">
-          {current?.name ?? "Durham & the East GTA"}
+          {current?.name ?? "Durham & the GTA"}
         </h3>
         <dl className="mt-7 grid grid-cols-2 gap-6">
           <div className="flex flex-col-reverse gap-1">

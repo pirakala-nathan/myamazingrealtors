@@ -217,7 +217,7 @@ export async function ServiceAreas() {
             Where {site.agent.firstName} works.
           </h2>
           <p className="text-[17px] leading-relaxed text-on-dark-muted">
-            From Clarington to Toronto, across Durham, York and the East GTA. Hover over an area to see how many homes
+            From Clarington to Mississauga, across Durham, York, Toronto and Peel. Hover over an area to see how many homes
             are for sale there right now.
           </p>
         </div>
