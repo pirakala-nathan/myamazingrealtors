@@ -6,7 +6,7 @@ import { GOOGLE_REVIEWS_TAG } from "@/lib/google-reviews";
 import { redirect } from "next/navigation";
 import { adminConfigured, endSession, passwordMatches, requireAdmin, startSession } from "@/lib/admin-auth";
 import { z } from "zod";
-import { LookupError, MLS_PATTERN, lookupListing, sampleListing, slugFor } from "@/lib/listings/proptx";
+import { LookupError, MLS_PATTERN, agentListingKeys, lookupListing, sampleListing, slugFor } from "@/lib/listings/proptx";
 import { savePhoto } from "@/lib/listings/photos";
 import { site } from "@/lib/site";
 import { LISTINGS_TAG, deleteListing, findListing, saveListing } from "@/lib/listings/store";
@@ -95,7 +95,7 @@ export async function refreshListing(mlsNumber: string) {
     // sale stays a sale, so PK's sold/leased showcase doesn't lose homes once they age out of the feed.
     const gone = existing.status === "sold" || existing.status === "leased" ? existing.status : "off-market";
     const listing: Listing = pulled
-      ? { ...pulled, addedAt: existing.addedAt, soldOverAsking: existing.soldOverAsking }
+      ? { ...pulled, addedAt: existing.addedAt, soldOverAsking: existing.soldOverAsking, hidden: existing.hidden, autoAdded: existing.autoAdded }
       : { ...existing, status: gone, fetchedAt: new Date().toISOString() };
     await saveListing(listing);
     updateTag(LISTINGS_TAG);
@@ -125,10 +125,73 @@ export async function setOverAsking(mlsNumber: string, overAsking: boolean): Pro
   return {};
 }
 
+/**
+ * Removes a listing. MLS® listings are hidden instead of deleted, so "Sync with MLS®" doesn't add them back;
+ * they can be shown again from the admin page. Hand-entered listings are deleted.
+ */
 export async function removeListing(mlsNumber: string) {
   await requireAdmin();
-  await deleteListing(mlsNumber);
+  const existing = await findListing(mlsNumber);
+  if (existing && existing.source !== "manual") await saveListing({ ...existing, hidden: true });
+  else await deleteListing(mlsNumber);
   updateTag(LISTINGS_TAG);
+}
+
+export async function showListing(mlsNumber: string) {
+  await requireAdmin();
+  const existing = await findListing(mlsNumber);
+  if (!existing) return;
+  await saveListing({ ...existing, hidden: false });
+  updateTag(LISTINGS_TAG);
+}
+
+/**
+ * "Sync with MLS®": finds every listing in the PropTx feed where PK is the listing or co-listing agent (by
+ * TRREB member ID, never by name), adds new ones and updates changed ones. Cancelled, expired and
+ * withdrawn listings are never added, and listings PK hid or typed in by hand are left alone.
+ */
+export async function syncListings(): Promise<AdminFormState> {
+  await requireAdmin();
+  const token = process.env.PROPTX_TOKEN;
+  if (!token) return { status: "error", message: "The PropTx connection isn’t set up yet (PROPTX_TOKEN is missing)." };
+
+  try {
+    const keys = await agentListingKeys(site.agent.mlsMemberId, token);
+    const added: string[] = [];
+    let updated = 0;
+    for (const { mlsNumber, modifiedAt } of keys) {
+      const existing = await findListing(mlsNumber);
+      if (existing?.source === "manual") continue;
+      // Unchanged since the last pull: skip it to save requests.
+      if (existing && modifiedAt && existing.modifiedAt === modifiedAt && existing.photos.length > 0) continue;
+      let pulled: Awaited<ReturnType<typeof lookupListing>>;
+      try {
+        pulled = await lookupListing(mlsNumber, token);
+      } catch (error) {
+        if (error instanceof LookupError) continue; // e.g. the seller opted out of internet display
+        throw error;
+      }
+      if (!pulled) continue;
+      if (!existing && pulled.status === "off-market") continue;
+      await saveListing({
+        ...pulled,
+        addedAt: existing?.addedAt ?? new Date().toISOString(),
+        soldOverAsking: existing?.soldOverAsking,
+        hidden: existing?.hidden,
+        autoAdded: existing ? existing.autoAdded : true,
+      });
+      if (existing) updated++;
+      else added.push(listingTitle(pulled));
+    }
+    updateTag(LISTINGS_TAG);
+    const parts = [
+      added.length ? `Added ${added.length}: ${added.join("; ")}.` : "No new listings.",
+      updated ? `Updated ${updated}.` : "",
+    ];
+    return { status: "success", message: `Found ${keys.length} of your listings in the MLS® feed. ${parts.join(" ")}`.trim() };
+  } catch (error) {
+    return failure(error);
+  }
 }
 
 // ---------------------------------------------------------------------------

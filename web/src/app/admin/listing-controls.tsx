@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState, useTransition } from "react";
-import { addListing, refreshListing, removeListing, setOverAsking, type AdminFormState } from "@/app/actions/admin";
+import { addListing, refreshListing, removeListing, setOverAsking, showListing, syncListings, type AdminFormState } from "@/app/actions/admin";
 
 const initial: AdminFormState = { status: "idle" };
 
@@ -31,6 +31,30 @@ export function AddListingForm() {
           {pending ? "Looking up…" : "Add listing"}
         </button>
       </div>
+      {state.message && (
+        <p
+          role={state.status === "error" ? "alert" : "status"}
+          className={`text-sm font-semibold ${state.status === "error" ? "text-red-800" : "text-aqua-700"}`}
+        >
+          {state.message}
+        </p>
+      )}
+    </form>
+  );
+}
+
+/** "Sync with MLS®": pulls in PK's new listings and updates changed ones. */
+export function SyncListingsForm() {
+  const [state, action, pending] = useActionState(syncListings, initial);
+  return (
+    <form action={action} className="flex flex-col items-start gap-3">
+      <button
+        type="submit"
+        disabled={pending}
+        className="min-h-12 rounded-none bg-navy-900 px-8 font-bold text-on-dark hover:bg-navy-700 disabled:opacity-70"
+      >
+        {pending ? "Syncing…" : "Sync with MLS®"}
+      </button>
       {state.message && (
         <p
           role={state.status === "error" ? "alert" : "status"}
@@ -100,6 +124,7 @@ export function RowActions({
   manual,
   sale = null,
   overAsking = false,
+  hidden = false,
 }: {
   mlsNumber: string;
   title: string;
@@ -107,6 +132,8 @@ export function RowActions({
   /** Set for sold/leased listings, which can be marked over asking. */
   sale?: "sold" | "leased" | null;
   overAsking?: boolean;
+  /** Hidden from the site by PK. */
+  hidden?: boolean;
 }) {
   const [pending, start] = useTransition();
   const button = "rounded-none border-[1.5px] border-navy-900 px-4 py-2 text-sm font-bold disabled:opacity-60";
@@ -122,16 +149,25 @@ export function RowActions({
           {pending ? "Working…" : "Refresh"}
         </button>
       )}
-      <button
-        type="button"
-        disabled={pending}
-        className={`${button} border-red-800 text-red-800`}
-        onClick={() => {
-          if (confirm(`Remove ${title} from the website? You can add it again later.`)) start(() => removeListing(mlsNumber));
-        }}
-      >
-        Remove
-      </button>
+      {hidden ? (
+        <button type="button" disabled={pending} className={button} onClick={() => start(() => showListing(mlsNumber))}>
+          Show on site
+        </button>
+      ) : (
+        <button
+          type="button"
+          disabled={pending}
+          className={`${button} border-red-800 text-red-800`}
+          onClick={() => {
+            const ask = manual
+              ? `Remove ${title} from the website? You can add it again later.`
+              : `Hide ${title} from the website? Syncing won’t bring it back; use “Show on site” to undo.`;
+            if (confirm(ask)) start(() => removeListing(mlsNumber));
+          }}
+        >
+          {manual ? "Remove" : "Hide"}
+        </button>
+      )}
     </div>
   );
 }

@@ -139,6 +139,24 @@ export async function lookupListing(mlsNumber: string, token: string): Promise<O
 }
 
 /**
+ * MLS® numbers of every listing in the feed where the agent is the listing agent or a co-listing agent,
+ * with when each last changed. Matched only by member ID, never by name.
+ */
+export async function agentListingKeys(memberId: string, token: string) {
+  if (!/^\d{4,10}$/.test(memberId)) throw new LookupError("The agent member ID isn’t valid.");
+  const filter = ["ListAgentKey", "CoListAgentKey", "CoListAgent3Key", "CoListAgent4Key"]
+    .map((field) => `${field} eq '${memberId}'`)
+    .join(" or ");
+  const rows = await query(
+    `Property?$filter=${encodeURIComponent(filter)}&$select=ListingKey,ModificationTimestamp&$top=500`,
+    token,
+  );
+  return rows
+    .map((r) => ({ mlsNumber: str(r.ListingKey), modifiedAt: str(r.ModificationTimestamp) }))
+    .filter((r): r is { mlsNumber: string; modifiedAt: string | null } => r.mlsNumber != null && MLS_PATTERN.test(r.mlsNumber));
+}
+
+/**
  * Development only, used when PROPTX_TOKEN isn't set: a clearly labelled sample
  * built from photos already in /public, so the admin and listing pages can be tried.
  */

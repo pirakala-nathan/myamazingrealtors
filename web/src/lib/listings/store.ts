@@ -54,7 +54,7 @@ export async function getListings(): Promise<Listing[]> {
   "use cache";
   cacheTag(LISTINGS_TAG);
   cacheLife("days");
-  const all = await readAll();
+  const all = (await readAll()).filter((l) => !l.hidden);
   return all.sort((a, b) => order[a.status] - order[b.status] || b.addedAt.localeCompare(a.addedAt));
 }
 
@@ -62,7 +62,7 @@ export async function getListingBySlug(slug: string): Promise<Listing | null> {
   "use cache";
   cacheTag(LISTINGS_TAG);
   cacheLife("days");
-  return (await readAll()).find((l) => l.slug === slug) ?? null;
+  return (await readAll()).find((l) => l.slug === slug && !l.hidden) ?? null;
 }
 
 /** Uncached read for the admin page. */

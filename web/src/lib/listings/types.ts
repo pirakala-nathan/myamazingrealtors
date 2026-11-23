@@ -30,6 +30,10 @@ export type Listing = {
   longitude: number | null;
   /** proptx: pulled by MLS® number. manual: typed in by PK on the admin page. */
   source: "proptx" | "dev-sample" | "manual";
+  /** Hidden from the site by PK. Synced listings are hidden rather than deleted, so the hourly sync doesn't re-add them. */
+  hidden?: boolean;
+  /** Added by the hourly sync rather than by PK. */
+  autoAdded?: boolean;
   /** Shows a "Sold over asking" badge (set by PK on manual listings). */
   soldOverAsking?: boolean;
   /** When the listing was last pulled from PropTx, or last edited by hand (ISO). */

@@ -8,7 +8,7 @@ import { formatPrice } from "@/lib/content/home";
 import { getListingsForAdmin } from "@/lib/listings/store";
 import { listingTitle, statusLabel } from "@/lib/listings/types";
 import { site } from "@/lib/site";
-import { AddListingForm, RowActions } from "./listing-controls";
+import { AddListingForm, RowActions, SyncListingsForm } from "./listing-controls";
 import { GoogleReviewsPanel } from "./google-panel";
 import { ReelsManager } from "./reels-form";
 import { MAX_REELS, getReelsForAdmin } from "@/lib/reels";
@@ -58,6 +58,16 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
       </section>
 
       <section className="flex flex-col gap-4 border border-cloud-300 bg-mist-50 p-6 md:p-8">
+        <h2 className="font-display text-3xl font-semibold">Sync with MLS®</h2>
+        <p className="text-body">
+          Adds every listing where {site.agent.firstName} is the listing or co-listing agent (found by TRREB member ID{" "}
+          {site.agent.mlsMemberId}), and updates prices, statuses and photos on the ones already here. Cancelled or
+          expired listings aren’t added. Run it after taking a new listing or when one sells.
+        </p>
+        <SyncListingsForm />
+      </section>
+
+      <section className="flex flex-col gap-4 border border-cloud-300 bg-mist-50 p-6 md:p-8">
         <h2 className="font-display text-3xl font-semibold">Add a listing</h2>
         <p className="text-body">
           Type the MLS® number. Photos, price and details are pulled from PropTx. Adding a number that’s already here
@@ -76,7 +86,7 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="font-display text-3xl font-semibold">On the site ({listings.length})</h2>
+        <h2 className="font-display text-3xl font-semibold">Listings ({listings.length})</h2>
         {listings.length === 0 ? (
           <p className="text-muted">No listings yet.</p>
         ) : (
@@ -93,7 +103,9 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
                     photos · updated {new Date(l.fetchedAt).toLocaleDateString("en-CA")}
                     {l.source === "dev-sample" && " · SAMPLE"}
                     {l.source === "manual" && " · added by hand"}
+                    {l.autoAdded && " · added by sync"}
                   </span>
+                  {l.hidden && <span className="text-sm font-bold text-red-800">Hidden from the site</span>}
                 </div>
                 <RowActions
                   mlsNumber={l.mlsNumber}
@@ -101,6 +113,7 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
                   manual={l.source === "manual"}
                   sale={l.status === "sold" || l.status === "leased" ? l.status : null}
                   overAsking={Boolean(l.soldOverAsking)}
+                  hidden={Boolean(l.hidden)}
                 />
               </li>
             ))}

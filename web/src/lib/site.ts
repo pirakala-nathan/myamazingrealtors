@@ -25,6 +25,8 @@ export const site = {
     email: "pk@myamazingrealtors.com",
     photo: "/images/team/pk-sithamparanathan.jpg",
     languages: ["English", "Tamil"],
+    /** TRREB member ID. PropTx puts it on listings as ListAgentKey / CoListAgentKey; the hourly sync finds PK's listings by it. */
+    mlsMemberId: "9565273",
     intro:
       "An excellent negotiator with a proven track record, PK has been trading in real estate for over 12 years. Strong sales acumen and hands-on experience in real estate development and building mean you get sharp advice on value, condition and potential. Serving you with honesty & integrity.",
   },
