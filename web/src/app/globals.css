@@ -495,6 +495,65 @@
   100% { opacity: 1; filter: drop-shadow(0 0 1px rgb(255 255 255 / 0.5)); }
 }
 
+/*
+ * Service-area map (src/components/home/service-area-map.tsx). Each outline has pathLength=1, so a dash of 1
+ * offset by 1 hides it. When the map scrolls into view (data-drawn) the outlines draw in one after another
+ * (--delay), then fill, then the names and pins appear. Hovering an area dims the others.
+ */
+.service-map { overflow: hidden; }
+.service-map-context { fill: #0f2838; stroke: #1c3a4d; stroke-width: 1; }
+.service-map-area {
+  fill: var(--color-navy-700);
+  fill-opacity: 0;
+  stroke: var(--color-aqua-400);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  cursor: pointer;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    stroke-dashoffset 1.1s ease-out var(--delay),
+    fill-opacity 0.6s ease calc(var(--delay) + 0.6s),
+    fill 0.35s,
+    opacity 0.35s,
+    transform 0.35s;
+}
+.service-map[data-drawn="true"] .service-map-area { stroke-dashoffset: 0; fill-opacity: 1; }
+.service-map[data-focus] .service-map-area { opacity: 0.4; }
+.service-map[data-focus] .service-map-area[data-on] { opacity: 1; fill: var(--color-aqua-400); transform: scale(1.03); }
+.service-map-label {
+  font-size: 19px;
+  font-weight: 700;
+  fill: #cfe6ee;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease var(--delay), fill 0.35s;
+}
+.service-map[data-drawn="true"] .service-map-label { opacity: 1; }
+.service-map[data-focus] .service-map-label:not([data-on]) { opacity: 0.35; transition-delay: 0s; }
+.service-map-label[data-on] { fill: var(--color-navy-900); }
+.service-map-pin { opacity: 0; transition: opacity 0.5s ease var(--delay); pointer-events: none; }
+.service-map[data-drawn="true"] .service-map-pin { opacity: 1; }
+.service-map-pin-ring { fill: none; stroke: var(--color-aqua-300); stroke-width: 2; }
+.service-map[data-drawn="true"] .service-map-pin-ring { animation: service-map-pin 2.2s ease-out var(--delay) infinite; }
+@keyframes service-map-pin {
+  from { r: 5px; opacity: 0.9; }
+  to { r: 18px; opacity: 0; }
+}
+.service-map-water { font-size: 17px; letter-spacing: 0.3em; fill: #2f5a70; pointer-events: none; }
+/* On phones the names would be too small to read; the area buttons under the map name them instead. */
+@media (width < 40rem) {
+  .service-map-label { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .service-map-area, .service-map-label, .service-map-pin { transition: none; }
+  .service-map .service-map-area { stroke-dashoffset: 0; fill-opacity: 1; }
+  .service-map .service-map-label, .service-map .service-map-pin { opacity: 1; }
+  .service-map .service-map-pin-ring { animation: none; }
+}
+
 /* Sections that rise into view the first time they scroll on screen (src/components/home/reveal.tsx). */
 .reveal > * {
   opacity: 0;

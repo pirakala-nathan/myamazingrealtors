@@ -7,6 +7,9 @@ import { ReviewCarousel } from "@/components/home/review-carousel";
 import { getReels } from "@/lib/reels";
 import { ReelCarousel } from "@/components/home/reel-carousel";
 import { ButtonLink } from "@/components/ui/button-link";
+import { ServiceAreaMap } from "@/components/home/service-area-map";
+import { MAP_AREAS, MAP_CONTEXT, MAP_VIEWBOX } from "@/lib/content/service-areas-map";
+import { getServiceAreaStats } from "@/lib/service-areas";
 
 const serviceIcons = {
   search: (
@@ -193,6 +196,39 @@ export async function Testimonials() {
           )}
         </p>
       )}
+    </section>
+  );
+}
+
+export async function ServiceAreas() {
+  const stats = await getServiceAreaStats();
+  const areas = MAP_AREAS.map((a) => {
+    const s = stats.find((x) => x.id === a.id);
+    return { ...a, forSale: s?.forSale ?? null, deals: s?.deals ?? 0, active: s?.active ?? 0 };
+  });
+  const live = areas.some((a) => a.forSale != null);
+
+  return (
+    <section id="areas" className="scroll-mt-20 overflow-hidden bg-navy-900 text-on-dark">
+      <div className="container-site py-20 md:py-24">
+        <div className="mb-10 flex max-w-2xl flex-col gap-4">
+          <p className="eyebrow text-aqua-400">Service areas</p>
+          <h2 className="font-display text-[clamp(2.5rem,4.6vw,4rem)] font-semibold leading-none">
+            Where {site.agent.firstName} works.
+          </h2>
+          <p className="text-[17px] leading-relaxed text-on-dark-muted">
+            From Clarington to Toronto, across Durham, York and the East GTA. Hover over an area to see how many homes
+            are for sale there right now.
+          </p>
+        </div>
+        <ServiceAreaMap areas={areas} context={MAP_CONTEXT} viewBox={MAP_VIEWBOX} />
+        <p className="mt-8 text-xs leading-relaxed text-on-dark-subtle">
+          {live &&
+            "Homes for sale: active residential listings on TRREB’s MLS® System, updated hourly. Toronto excludes Scarborough. "}
+          Boundaries: Ontario Ministry of Natural Resources and City of Toronto open data, under the Open Government
+          Licence – Ontario and the Open Government Licence – Toronto.
+        </p>
+      </div>
     </section>
   );
 }
