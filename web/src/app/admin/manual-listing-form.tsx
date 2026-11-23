@@ -7,6 +7,21 @@ import { AddressInput } from "./address-input";
 import { MAX_MANUAL_PHOTOS, type Listing } from "@/lib/listings/types";
 
 const initial: AdminFormState = { status: "idle" };
+
+const PROPERTY_TYPES = [
+  "Detached",
+  "Semi-Detached",
+  "Freehold Townhouse",
+  "Condo Townhouse",
+  "Condo Apartment",
+  "Link",
+  "Bungalow",
+];
+/** TRREB's square-footage ranges, as MLS® listings show them. */
+const SIZE_RANGES = ["< 700", "700-1100", "1100-1500", "1500-2000", "2000-2500", "2500-3000", "3000-3500", "3500-5000", "5000 +"];
+/** The options, plus an older listing's value if it isn't one of them, so editing doesn't lose it. */
+const withCurrent = (options: string[], current?: string | null) =>
+  current && !options.includes(current) ? [...options, current] : options;
 const MAX_EDGE = 2000; // px; photos are resized in the browser before upload
 
 const input =
@@ -243,28 +258,18 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
             {...err("listPrice")}
           />
         </Field>
-        <Field name="propertyType" label="Property type" hint="(optional)" state={state}>
-          <input
+        <Field name="propertyType" label="Property type" state={state}>
+          <select
             id="m-propertyType"
             name="propertyType"
-            list="m-type-list"
-            defaultValue={listing?.propertyType ?? ""}
-            placeholder="Detached"
+            defaultValue={listing ? (listing.propertyType ?? "") : "Detached"}
             className={input}
-          />
-          <datalist id="m-type-list">
-            {[
-              "Detached",
-              "Semi-Detached",
-              "Freehold Townhouse",
-              "Condo Townhouse",
-              "Condo Apartment",
-              "Link",
-              "Bungalow",
-            ].map((t) => (
-              <option key={t} value={t} />
+          >
+            <option value="">Not specified</option>
+            {withCurrent(PROPERTY_TYPES, listing?.propertyType).map((t) => (
+              <option key={t}>{t}</option>
             ))}
-          </datalist>
+          </select>
         </Field>
         <Field name="bedrooms" label="Bedrooms" hint="(e.g. 3 + 1)" state={state}>
           <input
@@ -285,8 +290,13 @@ export function ManualListingForm({ listing, cities }: { listing?: Listing; citi
             {...err("bathrooms")}
           />
         </Field>
-        <Field name="sizeRange" label="Size (sq ft)" hint="(optional, e.g. 1500-2000)" state={state}>
-          <input id="m-sizeRange" name="sizeRange" defaultValue={listing?.sizeRange ?? ""} className={input} />
+        <Field name="sizeRange" label="Size (sq ft)" hint="(optional)" state={state}>
+          <select id="m-sizeRange" name="sizeRange" defaultValue={listing?.sizeRange ?? ""} className={input}>
+            <option value="">Not specified</option>
+            {withCurrent(SIZE_RANGES, listing?.sizeRange).map((r) => (
+              <option key={r}>{r}</option>
+            ))}
+          </select>
         </Field>
         {status === "purchased" && (
           <div className="flex flex-col gap-2 sm:col-span-2">
